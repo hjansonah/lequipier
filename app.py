@@ -11,5 +11,10 @@ def index():
 def record():
     return render_template('record.html')
 
+@app.route('/atpgames')
+@app.route('/atpgames.html')   # Add this to serve at /record.html too
+def record():
+    return render_template('atpgames.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
