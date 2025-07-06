@@ -1,9 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Simple App</title>
+    <title>Coets Records</title>
 </head>
 <body>
-    <h1>What do you think about this ?</h1>
+    <h1>Coets Android Appended Table</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>column1</th>
+                <th>column2</th>
+                <th>Essai</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in records %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>
