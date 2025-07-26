@@ -25,8 +25,8 @@ def index():
 @app.route('/record.html')
 def record():
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM coets_appended ORDER BY id LIMIT 1;')
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT * FROM coets_appended ORDER BY "coet id" LIMIT 1;')
     row = cur.fetchone()
     cur.close()
     conn.close()
