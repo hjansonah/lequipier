@@ -93,5 +93,30 @@ def silexview():
 def coetstable():
     return render_template('coetstable.html')
 
+@app.route('/')
+def index():
+    return render_template('hometasks.html')  # <-- serve your file
+
+@app.route('/task/<int:task_id>', methods=['GET'])
+def get_task(task_id):
+    cur = conn.cursor()
+    cur.execute("SELECT id, task, \"Added date\" FROM public.hometasks WHERE id >= %s ORDER BY id LIMIT 1", (task_id,))
+    row = cur.fetchone()
+    cur.close()
+    if row:
+        return jsonify({'id': row[0], 'task': row[1], 'added_date': row[2].isoformat()})
+    else:
+        return jsonify({'message': 'No more tasks'}), 404
+
+@app.route('/task/<int:task_id>', methods=['POST'])
+def update_task(task_id):
+    data = request.json
+    new_task = data.get('task')
+    cur = conn.cursor()
+    cur.execute("UPDATE public.hometasks SET task = %s WHERE id = %s", (new_task, task_id))
+    conn.commit()
+    cur.close()
+    return jsonify({'message': 'Task updated'})
+
 if __name__ == '__main__':
     app.run(debug=True)
