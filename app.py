@@ -26,7 +26,7 @@ def index():
 def record():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute('SELECT * FROM coets_appended ORDER BY "Coet ID" LIMIT 1;')
+    cur.execute('SELECT * FROM coets_appended ORDER BY "Coet ID" LIMIT 50;')
     row = cur.fetchone()
     cur.close()
     conn.close()
@@ -40,6 +40,11 @@ def record():
 @app.route('/atpgames.html')
 def atpgames():
     return render_template('atpgames.html')
+
+@app.route('/coetstable')
+@app.route('/coetstable.html')
+def atpgames():
+    return render_template('coetstable.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

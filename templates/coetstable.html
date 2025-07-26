@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coët Record</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color: #111;
+            color: #fff;
+        }
+
+        .coet-text {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin: 1.5rem 0;
+        }
+
+        .field {
+            margin-bottom: 0.75rem;
+        }
+
+        .toggle {
+            width: 100px;
+            height: 100px;
+            background-color: #333;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .toggle.valid {
+            background-color: #007bff;
+        }
+
+        .toggle.invalid {
+            background-color: #001f3f;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                margin: 1rem;
+                font-size: 1rem;
+            }
+
+            .coet-text {
+                font-size: 1.2rem;
+            }
+
+            .toggle {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+    <script>
+        function toggleStillValid(Coet ID, isValid) {
+            fetch("/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                    id: id,
+                    value: !isValid
+                })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Swipe
+            let startX = 0;
+            let endX = 0;
+            const threshold = 50;
+            const coetId = {{ row['id'] }};
+
+            document.addEventListener("touchstart", e => {
+                startX = e.changedTouches[0].screenX;
+            });
+
+            document.addEventListener("touchend", e => {
+                endX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                if (endX < startX - threshold) {
+                    window.location.href = `/next/${coetId}`;
+                } else if (endX > startX + threshold) {
+                    window.location.href = `/previous/${coetId}`;
+                }
+            }
+
+            // Keyboard arrows
+            document.addEventListener("keydown", e => {
+                if (e.key === "ArrowRight") {
+                    window.location.href = `/next/${coetId}`;
+                } else if (e.key === "ArrowLeft") {
+                    window.location.href = `/previous/${coetId}`;
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+
+    <div class="field">
+        <button class="toggle {% if row['Still valid'] %}valid{% else %}invalid{% endif %}"
+                onclick="toggleStillValid({{ row['Coet ID'] }}, {{ row['Still valid'] | lower }})">
+        </button>
+    </div>
+
+    <div class="coet-text">{{ row['Coet'] }}</div>
+
+    <div class="field"><strong>Source:</strong> {{ row['Source'] }}</div>
+
+    <div class="field"><strong>Date Coet:</strong>
+        {{ row['date coet'].strftime("%d %b %Y") if row['date coet'] else '' }}
+    </div>
+
+</body>
+</html>
