@@ -1,6 +1,6 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, request
 
 app = Flask(__name__)
 
@@ -22,11 +22,25 @@ def index():
     return render_template('index.html')
 
 @app.route('/record')
-@app.route('/record.html')
 def record():
+    # Get the first record by Coet ID
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute('SELECT * FROM coets_appended ORDER BY "Coet ID" LIMIT 50;')
+    cur = conn.cursor()
+    cur.execute('SELECT "Coet ID" FROM coets_appended ORDER BY "Coet ID" ASC LIMIT 1')
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if row:
+        return redirect(url_for('record_by_id', coet_id=row['Coet ID']))
+    else:
+        return "Aucun enregistrement trouvé", 404
+
+@app.route('/record/<int:coet_id>')
+def record_by_id(coet_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM coets_appended WHERE "Coet ID" = %s', (coet_id,))
     row = cur.fetchone()
     cur.close()
     conn.close()
@@ -34,7 +48,35 @@ def record():
     if row:
         return render_template('record.html', row=row)
     else:
-        return "Aucun enregistrement trouvé", 404
+        return "Coët non trouvé", 404
+
+@app.route('/next/<int:coet_id>')
+def next_record(coet_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM coets_appended WHERE "Coet ID" > %s ORDER BY "Coet ID" ASC LIMIT 1', (coet_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if row:
+        return redirect(url_for('record_by_id', coet_id=row['Coet ID']))
+    else:
+        return "Fin des enregistrements", 404
+
+@app.route('/previous/<int:coet_id>')
+def previous_record(coet_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM coets_appended WHERE "Coet ID" < %s ORDER BY "Coet ID" DESC LIMIT 1', (coet_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if row:
+        return redirect(url_for('record_by_id', coet_id=row['Coet ID']))
+    else:
+        return "Début des enregistrements", 404
 
 @app.route('/atpgames')
 @app.route('/atpgames.html')
@@ -43,7 +85,7 @@ def atpgames():
 
 @app.route('/coetstable')
 @app.route('/coetstable.html')
-def atpgames():
+def coetstable():
     return render_template('coetstable.html')
 
 if __name__ == '__main__':
