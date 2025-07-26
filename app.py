@@ -83,6 +83,11 @@ def previous_record(coet_id):
 def atpgames():
     return render_template('atpgames.html')
 
+@app.route('/silexview')
+@app.route('/silexview.html')
+def silexview():
+    return render_template('silexview.html')
+
 @app.route('/coetstable')
 @app.route('/coetstable.html')
 def coetstable():
