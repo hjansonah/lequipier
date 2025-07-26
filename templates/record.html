@@ -62,7 +62,7 @@
         }
     </style>
     <script>
-        function toggleStillValid(id, isValid) {
+        function toggleStillValid(Coet ID, isValid) {
             fetch("/update", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -116,7 +116,7 @@
 
     <div class="field">
         <button class="toggle {% if row['Still valid'] %}valid{% else %}invalid{% endif %}"
-                onclick="toggleStillValid({{ row['id'] }}, {{ row['Still valid'] | lower }})">
+                onclick="toggleStillValid({{ row['Coet ID'] }}, {{ row['Still valid'] | lower }})">
         </button>
     </div>
 
