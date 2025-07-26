@@ -26,7 +26,7 @@ def index():
 def record():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM coets_android_appended LIMIT 50;')
+    cur.execute('SELECT * FROM coets_appended LIMIT 50;')
     rows = cur.fetchall()
     cur.close()
     conn.close()
