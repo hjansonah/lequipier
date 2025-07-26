@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.extras
 from flask import Flask, render_template
 
 app = Flask(__name__)
@@ -14,8 +15,7 @@ conn_params = {
 }
 
 def get_db_connection():
-    conn = psycopg2.connect(**conn_params)
-    return conn
+    return psycopg2.connect(**conn_params, cursor_factory=psycopg2.extras.RealDictCursor)
 
 @app.route('/')
 def index():
@@ -26,13 +26,15 @@ def index():
 def record():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM coets_appended LIMIT 50;')
-    rows = cur.fetchall()
+    cur.execute('SELECT * FROM coets_appended ORDER BY id LIMIT 1;')
+    row = cur.fetchone()
     cur.close()
     conn.close()
 
-    # Pass the rows to the template
-    return render_template('record.html', records=rows)
+    if row:
+        return render_template('record.html', row=row)
+    else:
+        return "Aucun enregistrement trouvé", 404
 
 @app.route('/atpgames')
 @app.route('/atpgames.html')
