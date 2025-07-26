@@ -26,7 +26,7 @@ def index():
 def record():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute('SELECT * FROM coets_appended ORDER BY coet id LIMIT 1;')
+    cur.execute('SELECT * FROM coets_appended ORDER BY "Coet ID" LIMIT 1;')
     row = cur.fetchone()
     cur.close()
     conn.close()
