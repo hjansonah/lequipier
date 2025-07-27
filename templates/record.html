@@ -2,34 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Coët Records</title>
+    <title>Edit Coët Record</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #111; color: #fff; padding: 2rem; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { padding: 0.5rem; border: 1px solid #555; text-align: left; }
-        th { background-color: #222; }
-        tr:nth-child(even) { background-color: #1a1a1a; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: #fff;
+            padding: 2rem;
+        }
+        form {
+            max-width: 600px;
+            margin: auto;
+            background-color: #222;
+            padding: 2rem;
+            border-radius: 10px;
+        }
+        label {
+            display: block;
+            margin-top: 1rem;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            margin-top: 2rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
-    <h1>Coët Records</h1>
-    <table>
-        <thead>
-            <tr>
-                {% for col in columns %}
-                    <th>{{ col }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-                <tr>
-                    {% for col in columns %}
-                        <td>{{ row[col] }}</td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h1>Edit Coët Record</h1>
+    <form action="/update/{{ record.ID }}" method="post">
+        <!-- Example fields (adapt based on your actual columns) -->
+        
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" value="{{ record.name }}">
+
+        <label for="location">Location:</label>
+        <input type="text" name="location" id="location" value="{{ record.location }}">
+
+        <label for="still_valid">Still Valid:</label>
+        <select name="still_valid" id="still_valid">
+            <option value="yes" {% if record.still_valid == 'yes' %}selected{% endif %}>Yes</option>
+            <option value="no" {% if record.still_valid == 'no' %}selected{% endif %}>No</option>
+        </select>
+
+        <!-- Add more fields as needed -->
+
+        <button type="submit">Update</button>
+    </form>
 </body>
 </html>
