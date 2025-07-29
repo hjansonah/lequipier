@@ -36,6 +36,37 @@ def index():
 
     except Exception as e:
         return f"An error occurred: {e}"
+    
+    @app.route("/update_records", methods=["POST"])
+def update_records():
+    try:
+        data = request.json
+        updates = data.get("updates", [])
+
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor()
+
+        for row in updates:
+            row_id = row.get("ID")
+            if not row_id:
+                continue
+
+            # Prepare dynamic SQL
+            columns = [k for k in row.keys() if k != "ID"]
+            values = [row[col] for col in columns]
+            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
+
+            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
+            cur.execute(query, values + [row_id])
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Records updated successfully."})
+
+    except Exception as e:
+        return jsonify({"message": f"Error updating records: {e}"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
