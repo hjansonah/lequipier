@@ -51,10 +51,14 @@ def update_records():
             if not row_id:
                 continue
 
-            # Prepare dynamic SQL
-            columns = [k for k in row.keys() if k != "ID"]
+            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
             values = [row[col] for col in columns]
+
+            # Add last_reviewed = now() to the query
             set_clause = ", ".join([f'"{col}" = %s' for col in columns])
+            if set_clause:
+                set_clause += ', '
+            set_clause += '"last_reviewed" = NOW()'
 
             query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
             cur.execute(query, values + [row_id])
