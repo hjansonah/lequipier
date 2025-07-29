@@ -37,7 +37,7 @@ def index():
     except Exception as e:
         return f"An error occurred: {e}"
     
-    @app.route("/update_records", methods=["POST"])
+@app.route("/update_records", methods=["POST"])
 def update_records():
     try:
         data = request.json
