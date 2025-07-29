@@ -9,11 +9,14 @@
         th, td { padding: 0.5rem; border: 1px solid #555; text-align: left; }
         th { background-color: #222; }
         tr:nth-child(even) { background-color: #1a1a1a; }
+        td[contenteditable] { background-color: #222; }
+        button { margin-top: 1rem; padding: 0.5rem 1rem; }
     </style>
 </head>
 <body>
     <h1>Coët Records</h1>
-    <table>
+
+    <table id="recordsTable">
         <thead>
             <tr>
                 {% for col in columns %}
@@ -23,13 +26,46 @@
         </thead>
         <tbody>
             {% for row in rows %}
-                <tr>
+                <tr data-id="{{ row['ID'] }}">
                     {% for col in columns %}
-                        <td>{{ row[col] }}</td>
+                        <td contenteditable="{{ 'false' if col == 'ID' else 'true' }}" data-col="{{ col }}">{{ row[col] }}</td>
                     {% endfor %}
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <button onclick="saveChanges()">Save Changes</button>
+
+    <script>
+        function saveChanges() {
+            const updates = [];
+            const rows = document.querySelectorAll('#recordsTable tbody tr');
+
+            rows.forEach(row => {
+                const id = row.getAttribute('data-id');
+                const cells = row.querySelectorAll('td');
+
+                const updatedRow = { ID: id };
+                cells.forEach(cell => {
+                    const col = cell.getAttribute('data-col');
+                    if (col !== 'ID') {
+                        updatedRow[col] = cell.innerText.trim();
+                    }
+                });
+
+                updates.push(updatedRow);
+            });
+
+            fetch('/update_records', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ updates: updates })
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => alert('Error: ' + error));
+        }
+    </script>
 </body>
 </html>
