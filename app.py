@@ -32,7 +32,7 @@ def index():
         cur.close()
         conn.close()
 
-        return render_template("recordeditable.html", rows=rows, columns=columns)
+        return render_template("record.html", rows=rows, columns=columns)
 
     except Exception as e:
         return f"An error occurred: {e}"
