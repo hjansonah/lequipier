@@ -32,10 +32,45 @@ def index():
         cur.close()
         conn.close()
 
-        return render_template("record.html", rows=rows, columns=columns)
+        return render_template("recordeditable.html", rows=rows, columns=columns)
 
     except Exception as e:
         return f"An error occurred: {e}"
+    
+@app.route("/update_records", methods=["POST"])
+def update_records():
+    try:
+        data = request.json
+        updates = data.get("updates", [])
+
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor()
+
+        for row in updates:
+            row_id = row.get("ID")
+            if not row_id:
+                continue
+
+            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
+            values = [row[col] for col in columns]
+
+            # Add last_reviewed = now() to the query
+            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
+            if set_clause:
+                set_clause += ', '
+            set_clause += '"last_reviewed" = NOW()'
+
+            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
+            cur.execute(query, values + [row_id])
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Records updated successfully."})
+
+    except Exception as e:
+        return jsonify({"message": f"Error updating records: {e}"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
