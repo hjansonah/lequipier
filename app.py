@@ -1,10 +1,10 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, redirect, url_for, request, jsonify
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# Database connection parameters
+# Database connection parameters (for Render)
 conn_params = {
     "host": "dpg-d1l8cgre5dus73fcn8mg-a.frankfurt-postgres.render.com",
     "port": 5432,
@@ -14,63 +14,62 @@ conn_params = {
     "sslmode": "require"
 }
 
+# Helper: fetch a single record by ID
+def get_record_by_id(record_id):
+    with psycopg2.connect(**conn_params) as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute('SELECT * FROM "coets_appended" WHERE "ID" = %s', (record_id,))
+            return cur.fetchone()
+
+# Route: Home — Show 50 most recent records (optional listing)
 @app.route("/")
 def index():
     try:
-        conn = psycopg2.connect(**conn_params)
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-        query = 'SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 50;'
-        cur.execute(query)
-        rows = cur.fetchall()
-
-        if rows:
-            columns = list(rows[0].keys())
-        else:
-            columns = []
-
-        cur.close()
-        conn.close()
-
-        return render_template("record.html", rows=rows, columns=columns)
-
+        with psycopg2.connect(**conn_params) as conn:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute('SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 50;')
+                rows = cur.fetchall()
+                columns = list(rows[0].keys()) if rows else []
+        return render_template("record_list.html", rows=rows, columns=columns)
     except Exception as e:
         return f"An error occurred: {e}"
-    
-@app.route("/update_records", methods=["POST"])
-def update_records():
+
+# Route: Show one record by ID
+@app.route('/record/<int:record_id>')
+def show_record(record_id):
+    record = get_record_by_id(record_id)
+    if not record:
+        return f"No record found with ID {record_id}", 404
+    return render_template("record.html", record=record)
+
+# Route: Update a single record
+@app.route("/update_record", methods=["POST"])
+def update_record():
     try:
         data = request.json
-        updates = data.get("updates", [])
+        record_id = data.get("ID")
+        if not record_id:
+            return jsonify({"message": "Missing record ID."}), 400
 
-        conn = psycopg2.connect(**conn_params)
-        cur = conn.cursor()
+        columns = [k for k in data.keys() if k != "ID" and k != "last_reviewed"]
+        values = [data[col] for col in columns]
 
-        for row in updates:
-            row_id = row.get("ID")
-            if not row_id:
-                continue
+        # Update set clause
+        set_clause = ", ".join([f'"{col}" = %s' for col in columns])
+        if set_clause:
+            set_clause += ', '
+        set_clause += '"last_reviewed" = NOW()'
 
-            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
-            values = [row[col] for col in columns]
+        query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
 
-            # Add last_reviewed = now() to the query
-            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
-            if set_clause:
-                set_clause += ', '
-            set_clause += '"last_reviewed" = NOW()'
+        with psycopg2.connect(**conn_params) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, values + [record_id])
+                conn.commit()
 
-            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
-            cur.execute(query, values + [row_id])
-
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({"message": "Records updated successfully."})
-
+        return jsonify({"message": "Record updated successfully."})
     except Exception as e:
-        return jsonify({"message": f"Error updating records: {e}"}), 500
-
+        return jsonify({"message": f"Error updating record: {e}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
