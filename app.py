@@ -14,20 +14,20 @@ conn_params = {
     "sslmode": "require"
 }
 
+# Reusable function to get DB connection
+def get_db_connection():
+    return psycopg2.connect(**conn_params)
+
+
 @app.route("/")
 def index():
     try:
-        conn = psycopg2.connect(**conn_params)
+        conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        query = 'SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 50;'
-        cur.execute(query)
+        cur.execute('SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 50;')
         rows = cur.fetchall()
-
-        if rows:
-            columns = list(rows[0].keys())
-        else:
-            columns = []
+        columns = list(rows[0].keys()) if rows else []
 
         cur.close()
         conn.close()
@@ -35,15 +35,19 @@ def index():
         return render_template("record.html", rows=rows, columns=columns)
 
     except Exception as e:
-        return f"An error occurred: {e}"
-    
+        return f"An error occurred: {e}", 500
+
+
 @app.route("/update_records", methods=["POST"])
 def update_records():
     try:
-        data = request.json
+        data = request.get_json()
         updates = data.get("updates", [])
 
-        conn = psycopg2.connect(**conn_params)
+        if not updates:
+            return jsonify({"message": "No records to update."}), 400
+
+        conn = get_db_connection()
         cur = conn.cursor()
 
         for row in updates:
@@ -51,21 +55,23 @@ def update_records():
             if not row_id:
                 continue
 
-            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
+            columns = [k for k in row.keys() if k not in ("ID", "last_reviewed")]
+            if not columns:
+                continue
+
             values = [row[col] for col in columns]
 
-            # Add last_reviewed = now() to the query
-            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
-            if set_clause:
-                set_clause += ', '
-            set_clause += '"last_reviewed" = NOW()'
+            # Prepare SQL SET clause and append last_reviewed
+            set_clause = ", ".join(f'"{col}" = %s' for col in columns)
+            set_clause += ', "last_reviewed" = NOW()'
 
-            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
-            cur.execute(query, values + [row_id])
+            sql = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
+            cur.execute(sql, values + [row_id])
 
         conn.commit()
         cur.close()
         conn.close()
+
         return jsonify({"message": "Records updated successfully."})
 
     except Exception as e:
