@@ -2,61 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Coët Record Viewer</title>
+    <title>Coët Records</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #111; color: #fff; padding: 2rem; }
-        label { display: block; margin-top: 1rem; }
-        input, textarea { width: 100%; padding: 0.5rem; margin-top: 0.25rem; background: #222; color: #fff; border: 1px solid #555; }
-        input[readonly] { background-color: #333; }
-        button { margin-top: 1rem; padding: 0.5rem 1rem; margin-right: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.5rem; border: 1px solid #555; text-align: left; }
+        th { background-color: #222; }
+        tr:nth-child(even) { background-color: #1a1a1a; }
+        td[contenteditable] { background-color: #222; }
+        button { margin-top: 1rem; padding: 0.5rem 1rem; }
     </style>
 </head>
 <body>
-    <h1>Record Viewer</h1>
+    <h1>Coët Records</h1>
 
-    <div id="recordContainer">
-        {% for col in columns %}
-            <label>{{ col }}
-                <input 
-                    type="text" 
-                    name="{{ col }}" 
-                    value="{{ current_record[col] }}" 
-                    {% if col == 'ID' %} readonly {% endif %}
-                >
-            </label>
-        {% endfor %}
-    </div>
+    <table id="recordsTable">
+        <thead>
+            <tr>
+                {% for col in columns %}
+                    <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+                <tr data-id="{{ row['ID'] }}">
+                    {% for col in columns %}
+                        <td contenteditable="{{ 'false' if col == 'ID' else 'true' }}" data-col="{{ col }}">{{ row[col] }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-    <button onclick="saveRecord()">Save</button>
-    <button onclick="navigateRecord('prev')">Previous</button>
-    <button onclick="navigateRecord('next')">Next</button>
+    <button onclick="saveChanges()">Save Changes</button>
 
     <script>
-        function getFormData() {
-            const inputs = document.querySelectorAll('#recordContainer input');
-            const data = {};
-            inputs.forEach(input => {
-                data[input.name] = input.value.trim();
+        function saveChanges() {
+            const updates = [];
+            const rows = document.querySelectorAll('#recordsTable tbody tr');
+
+            rows.forEach(row => {
+                const id = row.getAttribute('data-id');
+                const cells = row.querySelectorAll('td');
+
+                const updatedRow = { ID: id };
+                cells.forEach(cell => {
+                    const col = cell.getAttribute('data-col');
+                    if (col !== 'ID') {
+                        updatedRow[col] = cell.innerText.trim();
+                    }
+                });
+
+                updates.push(updatedRow);
             });
-            return data;
-        }
 
-        function saveRecord() {
-            const record = getFormData();
-
-            fetch('/update_record', {
+            fetch('/update_records', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(record)
+                body: JSON.stringify({ updates: updates })
             })
             .then(response => response.json())
             .then(data => alert(data.message))
             .catch(error => alert('Error: ' + error));
-        }
-
-        function navigateRecord(direction) {
-            const currentId = document.querySelector('input[name="ID"]').value;
-            window.location.href = `/view_record/${direction}/${currentId}`;
         }
     </script>
 </body>
