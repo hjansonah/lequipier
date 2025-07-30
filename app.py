@@ -18,24 +18,6 @@ conn_params = {
 def get_db_connection():
     return psycopg2.connect(**conn_params)
 
-# Home page: view multiple records in table
-@app.route("/")
-def index():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-        cur.execute('SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 50;')
-        rows = cur.fetchall()
-        columns = list(rows[0].keys()) if rows else []
-
-        cur.close()
-        conn.close()
-
-        return render_template("record.html", rows=rows, columns=columns)
-
-    except Exception as e:
-        return f"An error occurred: {e}", 500
 
 # View a single record
 @app.route("/view_record/<int:record_id>")
