@@ -90,11 +90,12 @@
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                window.location.href = "/"; // Load next unreviewed record
-            })
-            .catch(error => alert('Erreur : ' + error));
-        }
-    </script>
+                window.location.href = "/";
+           })
+           .catch(error => alert('Erreur : ' + error));
+    }
+</script>
+
 
 </body>
 </html>
