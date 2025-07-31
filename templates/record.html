@@ -70,30 +70,31 @@
 
     <script>
         function saveChanges() {
-            const row = document.querySelector('#recordsTable tbody tr');
-            const id = row.getAttribute('data-id');
-            const cells = row.querySelectorAll('td');
+    const row = document.querySelector('#recordsTable tbody tr');
+    const id = row.getAttribute('data-id');
+    const cells = row.querySelectorAll('td');
 
-            const updatedRow = { ID: id };
-            cells.forEach(cell => {
-                const col = cell.getAttribute('data-col');
-                if (col !== 'ID') {
-                    updatedRow[col] = cell.innerText.trim();
-                }
-            });
+    const updatedRow = { ID: id };
+    cells.forEach(cell => {
+        const col = cell.getAttribute('data-col');
+        if (col !== 'ID') {
+            updatedRow[col] = cell.innerText.trim();
+        }
+    });
 
-            fetch('/update_records', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ updates: [updatedRow] })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-                window.location.href = "/";
-           })
-           .catch(error => alert('Erreur : ' + error));
-    }
+    fetch('/update_records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates: [updatedRow] })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Erreur réseau');
+        // On ignore le contenu JSON renvoyé (pas besoin de lire data.message)
+        window.location.href = "/";
+    })
+    .catch(error => alert('Erreur : ' + error));
+}
+
 </script>
 
 
