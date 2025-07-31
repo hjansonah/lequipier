@@ -20,7 +20,7 @@ def index():
         conn = psycopg2.connect(**conn_params)
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        query = 'SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 50;'
+        query = 'SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 1;'
         cur.execute(query)
         rows = cur.fetchall()
 
