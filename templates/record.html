@@ -29,18 +29,22 @@
         td[contenteditable] {
             background-color: #222;
         }
-        button {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            font-size: 1rem;
-            background-color: #333;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #555;
-        }
+   button {
+    margin-top: 1rem;
+    padding: 1rem 2rem;       /* bouton plus grand */
+    font-size: 1.2rem;        /* texte plus grand */
+    font-weight: bold;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 6px;       /* coins arrondis */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #555;
+}
     </style>
 </head>
 <body>
@@ -66,7 +70,7 @@
         </tbody>
     </table>
 
-    <button onclick="saveChanges()">Enregistrer et passer au suivant</button>
+    <button onclick="saveChanges()">NEXT</button>
 
     <script>
         function saveChanges() {
