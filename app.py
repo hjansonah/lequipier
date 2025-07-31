@@ -21,18 +21,6 @@ def get_record_by_id(record_id):
             cur.execute('SELECT * FROM "coets_appended" WHERE "ID" = %s', (record_id,))
             return cur.fetchone()
 
-# Route: Home — Show 50 most recent records (optional listing)
-@app.route("/")
-def index():
-    try:
-        with psycopg2.connect(**conn_params) as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                cur.execute('SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 50;')
-                rows = cur.fetchall()
-                columns = list(rows[0].keys()) if rows else []
-        return render_template("record_list.html", rows=rows, columns=columns)
-    except Exception as e:
-        return f"An error occurred: {e}"
 
 # Route: Show one record by ID
 @app.route('/record/<int:record_id>')
