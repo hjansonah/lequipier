@@ -1,10 +1,10 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 app = Flask(__name__)
 
-# Database connection parameters (for Render)
+# PostgreSQL connection (Render)
 conn_params = {
     "host": "dpg-d1l8cgre5dus73fcn8mg-a.frankfurt-postgres.render.com",
     "port": 5432,
@@ -14,15 +14,23 @@ conn_params = {
     "sslmode": "require"
 }
 
-# Helper: fetch a single record by ID
+# Get a single record by ID
 def get_record_by_id(record_id):
     with psycopg2.connect(**conn_params) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute('SELECT * FROM "coets_appended" WHERE "ID" = %s', (record_id,))
             return cur.fetchone()
 
+# Homepage: input to go to a record
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    if request.method == 'POST':
+        record_id = request.form.get('record_id')
+        if record_id and record_id.isdigit():
+            return redirect(url_for('show_record', record_id=int(record_id)))
+    return render_template('home.html')
 
-# Route: Show one record by ID
+# View + edit a single record
 @app.route('/record/<int:record_id>')
 def show_record(record_id):
     record = get_record_by_id(record_id)
@@ -30,7 +38,7 @@ def show_record(record_id):
         return f"No record found with ID {record_id}", 404
     return render_template("record.html", record=record)
 
-# Route: Update a single record
+# Save changes to a record
 @app.route("/update_record", methods=["POST"])
 def update_record():
     try:
@@ -42,7 +50,6 @@ def update_record():
         columns = [k for k in data.keys() if k != "ID" and k != "last_reviewed"]
         values = [data[col] for col in columns]
 
-        # Update set clause
         set_clause = ", ".join([f'"{col}" = %s' for col in columns])
         if set_clause:
             set_clause += ', '
