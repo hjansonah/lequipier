@@ -1,10 +1,10 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 
 app = Flask(__name__)
 
-# PostgreSQL connection (Render)
+# Database connection parameters
 conn_params = {
     "host": "dpg-d1l8cgre5dus73fcn8mg-a.frankfurt-postgres.render.com",
     "port": 5432,
@@ -14,48 +14,63 @@ conn_params = {
     "sslmode": "require"
 }
 
-# Get a single record by ID
-def get_record_by_id(record_id):
-    with psycopg2.connect(**conn_params) as conn:
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute('SELECT * FROM "coets_appended" WHERE "ID" = %s', (record_id,))
-            return cur.fetchone()
+@app.route("/")
+def index():
+    try:
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-# Route: View + edit a single record
-@app.route('/record/<int:record_id>')
-def show_record(record_id):
-    record = get_record_by_id(record_id)
-    if not record:
-        return f"No record found with ID {record_id}", 404
-    return render_template("record.html", record=record)
+        query = 'SELECT * FROM "coets_appended" ORDER BY "ID" DESC LIMIT 50;'
+        cur.execute(query)
+        rows = cur.fetchall()
 
-# Route: Save changes
-@app.route("/update_record", methods=["POST"])
-def update_record():
+        if rows:
+            columns = list(rows[0].keys())
+        else:
+            columns = []
+
+        cur.close()
+        conn.close()
+
+        return render_template("record.html", rows=rows, columns=columns)
+
+    except Exception as e:
+        return f"An error occurred: {e}"
+    
+@app.route("/update_records", methods=["POST"])
+def update_records():
     try:
         data = request.json
-        record_id = data.get("ID")
-        if not record_id:
-            return jsonify({"message": "Missing record ID."}), 400
+        updates = data.get("updates", [])
 
-        columns = [k for k in data.keys() if k != "ID" and k != "last_reviewed"]
-        values = [data[col] for col in columns]
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor()
 
-        set_clause = ", ".join([f'"{col}" = %s' for col in columns])
-        if set_clause:
-            set_clause += ', '
-        set_clause += '"last_reviewed" = NOW()'
+        for row in updates:
+            row_id = row.get("ID")
+            if not row_id:
+                continue
 
-        query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
+            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
+            values = [row[col] for col in columns]
 
-        with psycopg2.connect(**conn_params) as conn:
-            with conn.cursor() as cur:
-                cur.execute(query, values + [record_id])
-                conn.commit()
+            # Add last_reviewed = now() to the query
+            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
+            if set_clause:
+                set_clause += ', '
+            set_clause += '"last_reviewed" = NOW()'
 
-        return jsonify({"message": "Record updated successfully."})
+            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
+            cur.execute(query, values + [row_id])
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Records updated successfully."})
+
     except Exception as e:
-        return jsonify({"message": f"Error updating record: {e}"}), 500
+        return jsonify({"message": f"Error updating records: {e}"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
