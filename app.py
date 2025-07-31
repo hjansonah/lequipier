@@ -1,6 +1,6 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
@@ -21,16 +21,7 @@ def get_record_by_id(record_id):
             cur.execute('SELECT * FROM "coets_appended" WHERE "ID" = %s', (record_id,))
             return cur.fetchone()
 
-# Homepage: input to go to a record
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        record_id = request.form.get('record_id')
-        if record_id and record_id.isdigit():
-            return redirect(url_for('show_record', record_id=int(record_id)))
-    return render_template('home.html')
-
-# View + edit a single record
+# Route: View + edit a single record
 @app.route('/record/<int:record_id>')
 def show_record(record_id):
     record = get_record_by_id(record_id)
@@ -38,7 +29,7 @@ def show_record(record_id):
         return f"No record found with ID {record_id}", 404
     return render_template("record.html", record=record)
 
-# Save changes to a record
+# Route: Save changes
 @app.route("/update_record", methods=["POST"])
 def update_record():
     try:
