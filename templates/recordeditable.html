@@ -80,7 +80,7 @@
         <tr data-id="{{ rows[0]['ID'] }}">
             {% for col in columns %}
                 <td data-col="{{ col }}">
-                    {% if col == 'still_valid' %}
+                    {% if col == 'still valid' %}
                         <button type="button"
                                 class="bool-toggle"
                                 data-value="{{ 'true' if rows[0][col] else 'false' }}"
