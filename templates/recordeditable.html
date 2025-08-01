@@ -68,8 +68,7 @@
 
 <h1>Coët – Enregistrement ID {{ rows[0]['ID'] }}</h1>
 
-<!-- DEBUG COLUMN NAMES -->
-<!-- <p>DEBUG: {{ columns }}</p> -->
+<p style="color: yellow">DEBUG: Columns = {{ columns }}</p>
 
 <table id="recordsTable">
     <thead>
@@ -83,7 +82,7 @@
         <tr data-id="{{ rows[0]['ID'] }}">
             {% for col in columns %}
                 <td data-col="{{ col }}">
-                    {% if col|lower == 'Still valid' %}
+                    {% if col == 'Still valid' %}
                         {% set val = rows[0][col] %}
                         <button type="button"
                                 class="bool-toggle"
@@ -105,13 +104,11 @@
 <button class="main-action" onclick="saveChanges()">NEXT</button>
 
 <script>
-    // Toggle boolean button behavior
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.bool-toggle').forEach(button => {
             button.addEventListener('click', () => {
                 const current = button.getAttribute('data-value') === 'true';
                 const nextValue = !current;
-
                 button.setAttribute('data-value', nextValue);
                 button.textContent = nextValue ? 'TRUE' : 'FALSE';
                 button.style.backgroundColor = nextValue ? '#007BFF' : '#DC3545';
@@ -119,18 +116,17 @@
         });
     });
 
-    // Collect values and send update
     function saveChanges() {
         const row = document.querySelector('#recordsTable tbody tr');
         const id = row.getAttribute('data-id');
         const cells = row.querySelectorAll('td');
-
         const updatedRow = { ID: id };
+
         cells.forEach(cell => {
             const col = cell.getAttribute('data-col');
             if (col === 'ID') return;
 
-            if (col.toLowerCase() === 'Still valid') {
+            if (col === 'Still valid') {
                 const btn = cell.querySelector('.bool-toggle');
                 updatedRow[col] = btn.getAttribute('data-value') === 'true';
             } else {
