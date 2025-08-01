@@ -126,7 +126,7 @@
             const col = cell.getAttribute('data-col');
             if (col === 'ID') return;
 
-            if (col === 'still_valid') {
+            if (col === 'still valid') {
                 const btn = cell.querySelector('.bool-toggle');
                 updatedRow[col] = btn.getAttribute('data-value') === 'true';
             } else {
