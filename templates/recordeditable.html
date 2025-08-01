@@ -10,33 +10,43 @@
             color: #fff;
             padding: 2rem;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
         }
+
         th, td {
             padding: 0.5rem;
             border: 1px solid #555;
             text-align: left;
         }
+
         th {
             background-color: #222;
         }
+
         tr:nth-child(even) {
             background-color: #1a1a1a;
         }
+
         td div[contenteditable] {
             background-color: #222;
             padding: 0.25rem;
         }
-        select {
-            background-color: #222;
-            color: #fff;
-            border: 1px solid #555;
-            padding: 0.25rem;
+
+        .bool-toggle {
+            padding: 0.4rem 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
-        button {
+
+        button.main-action {
             margin-top: 1rem;
             padding: 1rem 2rem;
             font-size: 1.2rem;
@@ -48,7 +58,8 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-        button:hover {
+
+        button.main-action:hover {
             background-color: #555;
         }
     </style>
@@ -70,10 +81,12 @@
             {% for col in columns %}
                 <td data-col="{{ col }}">
                     {% if col == 'still_valid' %}
-                        <select>
-                            <option value="true" {% if rows[0][col] %}selected{% endif %}>true</option>
-                            <option value="false" {% if not rows[0][col] %}selected{% endif %}>false</option>
-                        </select>
+                        <button type="button"
+                                class="bool-toggle"
+                                data-value="{{ 'true' if rows[0][col] else 'false' }}"
+                                style="background-color: {{ '#007BFF' if rows[0][col] else '#DC3545' }};">
+                            {{ 'TRUE' if rows[0][col] else 'FALSE' }}
+                        </button>
                     {% elif col == 'ID' %}
                         {{ rows[0][col] }}
                     {% else %}
@@ -85,9 +98,24 @@
     </tbody>
 </table>
 
-<button onclick="saveChanges()">NEXT</button>
+<button class="main-action" onclick="saveChanges()">NEXT</button>
 
 <script>
+    // Toggle boolean button behavior
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.bool-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const current = button.getAttribute('data-value') === 'true';
+                const nextValue = !current;
+
+                button.setAttribute('data-value', nextValue);
+                button.textContent = nextValue ? 'TRUE' : 'FALSE';
+                button.style.backgroundColor = nextValue ? '#007BFF' : '#DC3545';
+            });
+        });
+    });
+
+    // Collect values and send update
     function saveChanges() {
         const row = document.querySelector('#recordsTable tbody tr');
         const id = row.getAttribute('data-id');
@@ -99,8 +127,8 @@
             if (col === 'ID') return;
 
             if (col === 'still_valid') {
-                const select = cell.querySelector('select');
-                updatedRow[col] = select.value === 'true';
+                const btn = cell.querySelector('.bool-toggle');
+                updatedRow[col] = btn.getAttribute('data-value') === 'true';
             } else {
                 const div = cell.querySelector('div');
                 updatedRow[col] = div.innerText.trim();
