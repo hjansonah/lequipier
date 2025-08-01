@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# Database connection parameters
+# Database connection configuration
 conn_params = {
     "host": "dpg-d1l8cgre5dus73fcn8mg-a.frankfurt-postgres.render.com",
     "port": 5432,
@@ -14,67 +14,65 @@ conn_params = {
     "sslmode": "require"
 }
 
+# Route: Display the next unreviewed record
 @app.route("/")
 def index():
     try:
-        conn = psycopg2.connect(**conn_params)
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-        # Fetch the next record with last_reviewed IS NULL
-        query = 'SELECT * FROM "coets_appended" WHERE "last_reviewed" IS NULL ORDER BY "ID" ASC LIMIT 1;'
-        cur.execute(query)
-        rows = cur.fetchall()
-
-        if rows:
-            columns = list(rows[0].keys())
-        else:
-            columns = []
-
-        cur.close()
-        conn.close()
+        with psycopg2.connect(**conn_params) as conn:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT * FROM "coets_appended"
+                    WHERE "last_reviewed" IS NULL
+                    ORDER BY "ID" ASC
+                    LIMIT 1;
+                """)
+                rows = cur.fetchall()
 
         if not rows:
             return "<h2>Tous les enregistrements ont été traités.</h2>"
 
-        return render_template("record.html", rows=rows, columns=columns)
+        columns = list(rows[0].keys())
+        return render_template("recordeditable.html", rows=rows, columns=columns)
 
     except Exception as e:
         return f"An error occurred: {e}"
 
+# Route: Update a record after review
 @app.route("/update_records", methods=["POST"])
 def update_records():
     try:
-        data = request.json
+        data = request.get_json()
         updates = data.get("updates", [])
 
-        conn = psycopg2.connect(**conn_params)
-        cur = conn.cursor()
+        with psycopg2.connect(**conn_params) as conn:
+            with conn.cursor() as cur:
+                for row in updates:
+                    row_id = row.get("ID")
+                    if not row_id:
+                        continue
 
-        for row in updates:
-            row_id = row.get("ID")
-            if not row_id:
-                continue
+                    # Normalize booleans from string to proper boolean type
+                    for key, val in row.items():
+                        if isinstance(val, str) and val.lower() in ["true", "false"]:
+                            row[key] = val.lower() == "true"
 
-            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
-            values = [row[col] for col in columns]
+                    # Prepare the update
+                    columns = [k for k in row if k not in ("ID", "last_reviewed")]
+                    values = [row[col] for col in columns]
 
-            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
-            if set_clause:
-                set_clause += ', '
-            set_clause += '"last_reviewed" = NOW()'
+                    set_clause = ", ".join([f'"{col}" = %s' for col in columns])
+                    if set_clause:
+                        set_clause += ", "
+                    set_clause += '"last_reviewed" = NOW()'
 
-            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
-            cur.execute(query, values + [row_id])
+                    query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
+                    cur.execute(query, values + [row_id])
 
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        # After update, return success and trigger frontend redirect
         return jsonify({"message": "Record updated successfully. Redirecting..."})
 
     except Exception as e:
         return jsonify({"message": f"Error updating records: {e}"}), 500
 
+# Run the app
 if __name__ == "__main__":
     app.run(debug=True)

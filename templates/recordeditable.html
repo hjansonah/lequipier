@@ -26,81 +26,99 @@
         tr:nth-child(even) {
             background-color: #1a1a1a;
         }
-        td[contenteditable] {
+        td div[contenteditable] {
             background-color: #222;
+            padding: 0.25rem;
         }
-   button {
-    margin-top: 1rem;
-    padding: 1rem 2rem;       /* bouton plus grand */
-    font-size: 1.2rem;        /* texte plus grand */
-    font-weight: bold;
-    background-color: #333;
-    color: #fff;
-    border: none;
-    border-radius: 6px;       /* coins arrondis */
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #555;
-}
+        select {
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 0.25rem;
+        }
+        button {
+            margin-top: 1rem;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #555;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Coët – Enregistrement ID {{ rows[0]['ID'] }}</h1>
+<h1>Coët – Enregistrement ID {{ rows[0]['ID'] }}</h1>
 
-    <table id="recordsTable">
-        <thead>
-            <tr>
-                {% for col in columns %}
-                    <th>{{ col }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            <tr data-id="{{ rows[0]['ID'] }}">
-                {% for col in columns %}
-                    <td contenteditable="{{ 'false' if col == 'ID' else 'true' }}" data-col="{{ col }}">
+<table id="recordsTable">
+    <thead>
+        <tr>
+            {% for col in columns %}
+                <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        <tr data-id="{{ rows[0]['ID'] }}">
+            {% for col in columns %}
+                <td data-col="{{ col }}">
+                    {% if col == 'still_valid' %}
+                        <select>
+                            <option value="true" {% if rows[0][col] %}selected{% endif %}>true</option>
+                            <option value="false" {% if not rows[0][col] %}selected{% endif %}>false</option>
+                        </select>
+                    {% elif col == 'ID' %}
                         {{ rows[0][col] }}
-                    </td>
-                {% endfor %}
-            </tr>
-        </tbody>
-    </table>
+                    {% else %}
+                        <div contenteditable="true">{{ rows[0][col] }}</div>
+                    {% endif %}
+                </td>
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
 
-    <button onclick="saveChanges()">NEXT</button>
+<button onclick="saveChanges()">NEXT</button>
 
-    <script>
-        function saveChanges() {
-    const row = document.querySelector('#recordsTable tbody tr');
-    const id = row.getAttribute('data-id');
-    const cells = row.querySelectorAll('td');
+<script>
+    function saveChanges() {
+        const row = document.querySelector('#recordsTable tbody tr');
+        const id = row.getAttribute('data-id');
+        const cells = row.querySelectorAll('td');
 
-    const updatedRow = { ID: id };
-    cells.forEach(cell => {
-        const col = cell.getAttribute('data-col');
-        if (col !== 'ID') {
-            updatedRow[col] = cell.innerText.trim();
-        }
-    });
+        const updatedRow = { ID: id };
+        cells.forEach(cell => {
+            const col = cell.getAttribute('data-col');
+            if (col === 'ID') return;
 
-    fetch('/update_records', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ updates: [updatedRow] })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Erreur réseau');
-        // On ignore le contenu JSON renvoyé (pas besoin de lire data.message)
-        window.location.href = "/";
-    })
-    .catch(error => alert('Erreur : ' + error));
-}
+            if (col === 'still_valid') {
+                const select = cell.querySelector('select');
+                updatedRow[col] = select.value === 'true';
+            } else {
+                const div = cell.querySelector('div');
+                updatedRow[col] = div.innerText.trim();
+            }
+        });
 
+        fetch('/update_records', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates: [updatedRow] })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur réseau');
+            window.location.href = "/";
+        })
+        .catch(error => alert('Erreur : ' + error));
+    }
 </script>
-
 
 </body>
 </html>
