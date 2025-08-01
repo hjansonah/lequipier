@@ -68,6 +68,9 @@
 
 <h1>Coët – Enregistrement ID {{ rows[0]['ID'] }}</h1>
 
+<!-- DEBUG COLUMN NAMES -->
+<!-- <p>DEBUG: {{ columns }}</p> -->
+
 <table id="recordsTable">
     <thead>
         <tr>
@@ -80,12 +83,13 @@
         <tr data-id="{{ rows[0]['ID'] }}">
             {% for col in columns %}
                 <td data-col="{{ col }}">
-                    {% if col == 'still valid' %}
+                    {% if col|lower == 'Still valid' %}
+                        {% set val = rows[0][col] %}
                         <button type="button"
                                 class="bool-toggle"
-                                data-value="{{ 'true' if rows[0][col] else 'false' }}"
-                                style="background-color: {{ '#007BFF' if rows[0][col] else '#DC3545' }};">
-                            {{ 'TRUE' if rows[0][col] else 'FALSE' }}
+                                data-value="{{ 'true' if val else 'false' }}"
+                                style="background-color: {{ '#007BFF' if val else '#DC3545' }};">
+                            {{ 'TRUE' if val else 'FALSE' }}
                         </button>
                     {% elif col == 'ID' %}
                         {{ rows[0][col] }}
@@ -126,7 +130,7 @@
             const col = cell.getAttribute('data-col');
             if (col === 'ID') return;
 
-            if (col === 'still valid') {
+            if (col.toLowerCase() === 'Still valid') {
                 const btn = cell.querySelector('.bool-toggle');
                 updatedRow[col] = btn.getAttribute('data-value') === 'true';
             } else {
