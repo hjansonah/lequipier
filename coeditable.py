@@ -42,13 +42,15 @@ def navigate_record(direction, current_id):
         if direction == "next":
             query = '''
                 SELECT * FROM "coets_appended"
-                WHERE "ID" > %s OR %s IS NULL
+                WHERE ("ID" > %s OR %s IS NULL)
+                AND "last_reviewed" IS NULL
                 ORDER BY "ID" ASC LIMIT 1;
             '''
         else:
             query = '''
                 SELECT * FROM "coets_appended"
                 WHERE "ID" < %s
+                AND "last_reviewed" IS NULL
                 ORDER BY "ID" DESC LIMIT 1;
             '''
 
@@ -66,6 +68,7 @@ def navigate_record(direction, current_id):
 
     except Exception as e:
         return f"An error occurred: {e}"
+
 
 
 # Run the app
