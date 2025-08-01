@@ -46,6 +46,7 @@ def navigate_record(direction, current_id):
                 AND "last_reviewed" IS NULL
                 ORDER BY "ID" ASC LIMIT 1;
             '''
+            params = (current_id, current_id)
         else:
             query = '''
                 SELECT * FROM "coets_appended"
@@ -53,8 +54,10 @@ def navigate_record(direction, current_id):
                 AND "last_reviewed" IS NULL
                 ORDER BY "ID" DESC LIMIT 1;
             '''
+            params = (current_id,)
 
-        cur.execute(query, (current_id, current_id))
+        cur.execute(query, params)
+
         rows = cur.fetchall()
         columns = list(rows[0].keys()) if rows else []
 
@@ -68,7 +71,6 @@ def navigate_record(direction, current_id):
 
     except Exception as e:
         return f"An error occurred: {e}"
-
 
 
 # Run the app
