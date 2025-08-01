@@ -68,7 +68,6 @@
 
 <h1>Coët – Enregistrement ID {{ rows[0]['ID'] }}</h1>
 
-
 <table id="recordsTable">
     <thead>
         <tr>
@@ -103,92 +102,99 @@
 <button class="main-action" onclick="saveChanges()">NEXT</button>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-    // Toggle boolean button behavior
-    document.querySelectorAll('.bool-toggle').forEach(button => {
-        button.addEventListener('click', () => {
-            const current = button.getAttribute('data-value') === 'true';
-            const nextValue = !current;
-            button.setAttribute('data-value', nextValue);
-            button.textContent = nextValue ? 'TRUE' : 'FALSE';
-            button.style.backgroundColor = nextValue ? '#007BFF' : '#DC3545';
+    function attachToggleListeners() {
+        document.querySelectorAll('.bool-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const current = button.getAttribute('data-value') === 'true';
+                const nextValue = !current;
+                button.setAttribute('data-value', nextValue);
+                button.textContent = nextValue ? 'TRUE' : 'FALSE';
+                button.style.backgroundColor = nextValue ? '#007BFF' : '#DC3545';
+            });
         });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        attachToggleListeners();
+        attachSwipeListeners();
     });
 
-    // Swipe detection for touchscreen
-    let startX = 0;
+    function saveChanges() {
+        const row = document.querySelector('#recordsTable tbody tr');
+        const id = row.getAttribute('data-id');
+        const cells = row.querySelectorAll('td');
+        const updatedRow = { ID: id };
 
-    document.addEventListener('touchstart', function (e) {
-        startX = e.changedTouches[0].screenX;
-    });
+        cells.forEach(cell => {
+            const col = cell.getAttribute('data-col');
+            if (col === 'ID') return;
 
-    document.addEventListener('touchend', function (e) {
-        const endX = e.changedTouches[0].screenX;
-        const deltaX = endX - startX;
-
-        if (Math.abs(deltaX) > 50) {
-            if (deltaX > 0) {
-                swipe('prev');
+            if (col === 'Still valid') {
+                const btn = cell.querySelector('.bool-toggle');
+                updatedRow[col] = btn.getAttribute('data-value') === 'true';
             } else {
+                const div = cell.querySelector('div');
+                updatedRow[col] = div.innerText.trim();
+            }
+        });
+
+        fetch('/update_records', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates: [updatedRow] })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur réseau');
+            window.location.href = "/";
+        })
+        .catch(error => alert('Erreur : ' + error));
+    }
+
+    // Swipe and keyboard navigation
+
+    function attachSwipeListeners() {
+        let startX = 0;
+
+        document.addEventListener('touchstart', function (e) {
+            startX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', function (e) {
+            const endX = e.changedTouches[0].screenX;
+            const deltaX = endX - startX;
+
+            if (Math.abs(deltaX) > 50) {
+                if (deltaX > 0) {
+                    swipe('prev');
+                } else {
+                    swipe('next');
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft') {
+                swipe('prev');
+            } else if (e.key === 'ArrowRight') {
                 swipe('next');
             }
-        }
-    });
+        });
+    }
 
-    // Keyboard fallback: ← → arrows
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowLeft') {
-            swipe('prev');
-        } else if (e.key === 'ArrowRight') {
-            swipe('next');
-        }
-    });
-});
+    function swipe(direction) {
+        const row = document.querySelector('#recordsTable tbody tr');
+        const currentID = row.getAttribute('data-id');
 
-function saveChanges() {
-    const row = document.querySelector('#recordsTable tbody tr');
-    const id = row.getAttribute('data-id');
-    const cells = row.querySelectorAll('td');
-    const updatedRow = { ID: id };
-
-    cells.forEach(cell => {
-        const col = cell.getAttribute('data-col');
-        if (col === 'ID') return;
-
-        if (col === 'Still valid') {
-            const btn = cell.querySelector('.bool-toggle');
-            updatedRow[col] = btn.getAttribute('data-value') === 'true';
-        } else {
-            const div = cell.querySelector('div');
-            updatedRow[col] = div.innerText.trim();
-        }
-    });
-
-    fetch('/update_records', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ updates: [updatedRow] })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Erreur réseau');
-        window.location.href = "/";
-    })
-    .catch(error => alert('Erreur : ' + error));
-}
-
-function swipe(direction) {
-    const row = document.querySelector('#recordsTable tbody tr');
-    const currentID = row.getAttribute('data-id');
-
-    fetch(`/navigate?direction=${direction}&current_id=${currentID}`)
-        .then(response => response.text())
-        .then(html => {
-            document.body.innerHTML = html;
-        })
-        .catch(error => alert('Navigation error: ' + error));
-}
-
-
+        fetch(`/navigate?direction=${direction}&current_id=${currentID}`)
+            .then(response => response.text())
+            .then(html => {
+                document.body.innerHTML = html;
+                // Reattach listeners on new content
+                attachToggleListeners();
+                attachSwipeListeners();
+            })
+            .catch(error => alert('Navigation error: ' + error));
+    }
 </script>
 
 </body>
