@@ -104,47 +104,91 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.bool-toggle').forEach(button => {
-            button.addEventListener('click', () => {
-                const current = button.getAttribute('data-value') === 'true';
-                const nextValue = !current;
-                button.setAttribute('data-value', nextValue);
-                button.textContent = nextValue ? 'TRUE' : 'FALSE';
-                button.style.backgroundColor = nextValue ? '#007BFF' : '#DC3545';
-            });
+    // Toggle boolean button behavior
+    document.querySelectorAll('.bool-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const current = button.getAttribute('data-value') === 'true';
+            const nextValue = !current;
+            button.setAttribute('data-value', nextValue);
+            button.textContent = nextValue ? 'TRUE' : 'FALSE';
+            button.style.backgroundColor = nextValue ? '#007BFF' : '#DC3545';
         });
     });
 
-    function saveChanges() {
-        const row = document.querySelector('#recordsTable tbody tr');
-        const id = row.getAttribute('data-id');
-        const cells = row.querySelectorAll('td');
-        const updatedRow = { ID: id };
+    // Swipe detection for touchscreen
+    let startX = 0;
 
-        cells.forEach(cell => {
-            const col = cell.getAttribute('data-col');
-            if (col === 'ID') return;
+    document.addEventListener('touchstart', function (e) {
+        startX = e.changedTouches[0].screenX;
+    });
 
-            if (col === 'Still valid') {
-                const btn = cell.querySelector('.bool-toggle');
-                updatedRow[col] = btn.getAttribute('data-value') === 'true';
+    document.addEventListener('touchend', function (e) {
+        const endX = e.changedTouches[0].screenX;
+        const deltaX = endX - startX;
+
+        if (Math.abs(deltaX) > 50) {
+            if (deltaX > 0) {
+                swipe('prev');
             } else {
-                const div = cell.querySelector('div');
-                updatedRow[col] = div.innerText.trim();
+                swipe('next');
             }
-        });
+        }
+    });
 
-        fetch('/update_records', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ updates: [updatedRow] })
+    // Keyboard fallback: ← → arrows
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') {
+            swipe('prev');
+        } else if (e.key === 'ArrowRight') {
+            swipe('next');
+        }
+    });
+});
+
+function saveChanges() {
+    const row = document.querySelector('#recordsTable tbody tr');
+    const id = row.getAttribute('data-id');
+    const cells = row.querySelectorAll('td');
+    const updatedRow = { ID: id };
+
+    cells.forEach(cell => {
+        const col = cell.getAttribute('data-col');
+        if (col === 'ID') return;
+
+        if (col === 'Still valid') {
+            const btn = cell.querySelector('.bool-toggle');
+            updatedRow[col] = btn.getAttribute('data-value') === 'true';
+        } else {
+            const div = cell.querySelector('div');
+            updatedRow[col] = div.innerText.trim();
+        }
+    });
+
+    fetch('/update_records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates: [updatedRow] })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Erreur réseau');
+        window.location.href = "/";
+    })
+    .catch(error => alert('Erreur : ' + error));
+}
+
+function swipe(direction) {
+    const row = document.querySelector('#recordsTable tbody tr');
+    const currentID = row.getAttribute('data-id');
+
+    fetch(`/navigate?direction=${direction}&current_id=${currentID}`)
+        .then(response => response.text())
+        .then(html => {
+            document.body.innerHTML = html;
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Erreur réseau');
-            window.location.href = "/";
-        })
-        .catch(error => alert('Erreur : ' + error));
-    }
+        .catch(error => alert('Navigation error: ' + error));
+}
+
+
 </script>
 
 </body>

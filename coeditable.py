@@ -14,64 +14,59 @@ conn_params = {
     "sslmode": "require"
 }
 
-# Route: Display the next unreviewed record
 @app.route("/")
 def index():
+    return navigate_record(direction="next", current_id=None)
+
+
+@app.route("/navigate")
+def navigate():
+    direction = request.args.get("direction")
+    current_id = request.args.get("current_id")
+    return navigate_record(direction, current_id)
+
+
+def navigate_record(direction, current_id):
     try:
-        with psycopg2.connect(**conn_params) as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                cur.execute("""
-                    SELECT * FROM "coets_appended"
-                    WHERE "last_reviewed" IS NULL
-                    ORDER BY "ID" ASC
-                    LIMIT 1;
-                """)
-                rows = cur.fetchall()
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        if current_id:
+            # Mark current record as reviewed
+            cur.execute(
+                'UPDATE "coets_appended" SET "last_reviewed" = NOW() WHERE "ID" = %s;',
+                (current_id,)
+            )
+            conn.commit()
+
+        if direction == "next":
+            query = '''
+                SELECT * FROM "coets_appended"
+                WHERE "ID" > %s OR %s IS NULL
+                ORDER BY "ID" ASC LIMIT 1;
+            '''
+        else:
+            query = '''
+                SELECT * FROM "coets_appended"
+                WHERE "ID" < %s
+                ORDER BY "ID" DESC LIMIT 1;
+            '''
+
+        cur.execute(query, (current_id, current_id))
+        rows = cur.fetchall()
+        columns = list(rows[0].keys()) if rows else []
+
+        cur.close()
+        conn.close()
 
         if not rows:
-            return "<h2>Tous les enregistrements ont été traités.</h2>"
+            return "<h2>Fin de la liste.</h2>"
 
-        columns = list(rows[0].keys())
         return render_template("recordeditable.html", rows=rows, columns=columns)
 
     except Exception as e:
         return f"An error occurred: {e}"
 
-# Route: Update a record after review
-@app.route("/update_records", methods=["POST"])
-def update_records():
-    try:
-        data = request.get_json()
-        updates = data.get("updates", [])
-
-        with psycopg2.connect(**conn_params) as conn:
-            with conn.cursor() as cur:
-                for row in updates:
-                    row_id = row.get("ID")
-                    if not row_id:
-                        continue
-
-                    # Normalize booleans from string to proper boolean type
-                    for key, val in row.items():
-                        if isinstance(val, str) and val.lower() in ["true", "false"]:
-                            row[key] = val.lower() == "true"
-
-                    # Prepare the update
-                    columns = [k for k in row if k not in ("ID", "last_reviewed")]
-                    values = [row[col] for col in columns]
-
-                    set_clause = ", ".join([f'"{col}" = %s' for col in columns])
-                    if set_clause:
-                        set_clause += ", "
-                    set_clause += '"last_reviewed" = NOW()'
-
-                    query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
-                    cur.execute(query, values + [row_id])
-
-        return jsonify({"message": "Record updated successfully. Redirecting..."})
-
-    except Exception as e:
-        return jsonify({"message": f"Error updating records: {e}"}), 500
 
 # Run the app
 if __name__ == "__main__":
