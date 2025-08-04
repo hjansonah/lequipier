@@ -120,35 +120,45 @@
     });
 
     function saveChanges() {
-        const row = document.querySelector('#recordsTable tbody tr');
-        const id = row.getAttribute('data-id');
-        const cells = row.querySelectorAll('td');
-        const updatedRow = { ID: id };
+    const row = document.querySelector('#recordsTable tbody tr');
+    const id = row.getAttribute('data-id');
+    const cells = row.querySelectorAll('td');
+    const updatedRow = { ID: id };
 
-        cells.forEach(cell => {
-            const col = cell.getAttribute('data-col');
-            if (col === 'ID') return;
+    cells.forEach(cell => {
+        const col = cell.getAttribute('data-col');
+        if (col === 'ID') return;
 
-            if (col === 'Still valid') {
-                const btn = cell.querySelector('.bool-toggle');
-                updatedRow[col] = btn.getAttribute('data-value') === 'true';
-            } else {
-                const div = cell.querySelector('div');
-                updatedRow[col] = div.innerText.trim();
-            }
-        });
+        if (col === 'Still valid') {
+            const btn = cell.querySelector('.bool-toggle');
+            updatedRow[col] = btn.getAttribute('data-value') === 'true';
+        } else {
+            const div = cell.querySelector('div');
+            updatedRow[col] = div ? div.innerText.trim() : null;
+        }
+    });
 
-        fetch('/update_records', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ updates: [updatedRow] })
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Erreur réseau');
-            window.location.href = "/";
-        })
-        .catch(error => alert('Erreur : ' + error));
-    }
+    fetch('/update_records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates: [updatedRow] })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { 
+                throw new Error(`Erreur serveur : ${response.status} ${response.statusText}\n${text}`); 
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Update response:', data);
+        window.location.href = "/";
+    })
+    .catch(error => alert('Erreur : ' + error.message));
+}
+
+
 
     // Swipe and keyboard navigation
 
