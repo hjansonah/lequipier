@@ -96,8 +96,12 @@ def update_records():
             for key, val in row.items():
                 if key == 'ID':
                     continue
+                # Convert "true"/"false" strings to bool
+                if isinstance(val, str) and val.lower() in ['true', 'false']:
+                    val = val.lower() == 'true'
                 columns.append(f'"{key}" = %s')
                 values.append(val)
+
             
             if columns:
                 query = f'UPDATE "coets_appended" SET {", ".join(columns)} WHERE "ID" = %s;'
