@@ -71,6 +71,48 @@ def navigate_record(direction, current_id):
 
     except Exception as e:
         return f"An error occurred: {e}"
+    
+    
+@app.route('/update_records', methods=['POST'])
+def update_records():
+    try:
+        data = request.get_json()
+        updates = data.get('updates', [])
+
+        if not updates:
+            return jsonify({"error": "No updates received"}), 400
+
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor()
+
+        for row in updates:
+            id_ = row.get('ID')
+            if not id_:
+                continue
+            
+            # Build the SET part dynamically but safely
+            columns = []
+            values = []
+            for key, val in row.items():
+                if key == 'ID':
+                    continue
+                columns.append(f'"{key}" = %s')
+                values.append(val)
+            
+            if columns:
+                query = f'UPDATE "coets_appended" SET {", ".join(columns)} WHERE "ID" = %s;'
+                values.append(id_)
+                cur.execute(query, values)
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 # Run the app
