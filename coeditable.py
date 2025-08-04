@@ -76,7 +76,12 @@ def navigate_record(direction, current_id):
 @app.route('/update_records', methods=['POST'])
 def update_records():
     try:
+        # Debug log raw request data
+        print("RAW PAYLOAD:", request.get_data(as_text=True))
+        
         data = request.get_json()
+        print("Parsed JSON:", data)
+
         updates = data.get('updates', [])
 
         if not updates:
@@ -89,25 +94,27 @@ def update_records():
             id_ = row.get('ID')
             if not id_:
                 continue
-            
-            # Build the SET part dynamically but safely
+
             columns = []
             values = []
+
             for key, val in row.items():
                 if key == 'ID':
                     continue
-                # Convert "true"/"false" strings to bool
-                if isinstance(val, str) and val.lower() in ['true', 'false']:
-                    val = val.lower() == 'true'
+                if key == 'Still valid':
+                    # Normalize to boolean (very important)
+                    val = True if str(val).lower() in ['true', '1'] else False
                 columns.append(f'"{key}" = %s')
                 values.append(val)
 
-            
             if columns:
                 query = f'UPDATE "coets_appended" SET {", ".join(columns)} WHERE "ID" = %s;'
                 values.append(id_)
+                print("Executing SQL:", query)
+                print("With values:", values)
                 cur.execute(query, values)
-        
+                print(f"Updated rows: {cur.rowcount}")
+
         conn.commit()
         cur.close()
         conn.close()
@@ -115,7 +122,9 @@ def update_records():
         return jsonify({"status": "success"})
 
     except Exception as e:
+        print("ERROR in update_records:", str(e))
         return jsonify({"error": str(e)}), 500
+
 
 
 
