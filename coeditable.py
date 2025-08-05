@@ -18,13 +18,11 @@ conn_params = {
 def index():
     return navigate_record(direction="next", current_id=None)
 
-
 @app.route("/navigate")
 def navigate():
     direction = request.args.get("direction")
     current_id = request.args.get("current_id")
     return navigate_record(direction, current_id)
-
 
 def navigate_record(direction, current_id):
     try:
@@ -44,7 +42,8 @@ def navigate_record(direction, current_id):
                 SELECT * FROM "coets_appended"
                 WHERE ("ID" > %s OR %s IS NULL)
                 AND "last_reviewed" IS NULL
-                ORDER BY "ID" ASC LIMIT 1;
+                ORDER BY "ID" ASC
+                LIMIT 1;
             '''
             params = (current_id, current_id)
         else:
@@ -52,12 +51,12 @@ def navigate_record(direction, current_id):
                 SELECT * FROM "coets_appended"
                 WHERE "ID" < %s
                 AND "last_reviewed" IS NULL
-                ORDER BY "ID" DESC LIMIT 1;
+                ORDER BY "ID" DESC
+                LIMIT 1;
             '''
             params = (current_id,)
 
         cur.execute(query, params)
-
         rows = cur.fetchall()
         columns = list(rows[0].keys()) if rows else []
 
@@ -71,19 +70,17 @@ def navigate_record(direction, current_id):
 
     except Exception as e:
         return f"An error occurred: {e}"
-    
-    
+
 @app.route('/update_records', methods=['POST'])
 def update_records():
     try:
         # Debug log raw request data
         print("RAW PAYLOAD:", request.get_data(as_text=True))
-        
+
         data = request.get_json()
         print("Parsed JSON:", data)
 
         updates = data.get('updates', [])
-
         if not updates:
             return jsonify({"error": "No updates received"}), 400
 
@@ -102,7 +99,6 @@ def update_records():
                 if key == 'ID':
                     continue
                 if key == 'Still valid':
-                    # Normalize to boolean (very important)
                     val = True if str(val).lower() in ['true', '1'] else False
                 columns.append(f'"{key}" = %s')
                 values.append(val)
@@ -124,26 +120,7 @@ def update_records():
     except Exception as e:
         print("ERROR in update_records:", str(e))
         return jsonify({"error": str(e)}), 500
-    
-    @app.route('/test_update')
-    def test_update():
-    try:
-        conn = psycopg2.connect(**conn_params)
-        cur = conn.cursor()
-        test_id = 123  # Replace with an actual existing ID
-        cur.execute('UPDATE "coets_appended" SET "Still valid" = FALSE WHERE "ID" = %s;', (test_id,))
-        conn.commit()
-        print(f"Forced update. Rows updated: {cur.rowcount}")
-        cur.close()
-        conn.close()
-        return "OK"
-    except Exception as e:
-        return f"Test failed: {e}"
 
 
-
-
-
-# Run the app
 if __name__ == "__main__":
     app.run(debug=True)
