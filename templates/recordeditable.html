@@ -77,26 +77,25 @@
         </tr>
     </thead>
     <tbody>
-        <tr data-id="{{ rows[0]['ID'] }}">
-            {% for col in columns %}
-                <td data-col="{{ col }}">
-                    {% if col == 'Still valid' %}
-                        {% set val = rows[0][col] %}
-                        <button type="button"
-                                class="bool-toggle"
-                                data-value="{{ 'true' if val else 'false' }}"
-                                style="background-color: {{ '#007BFF' if val else '#DC3545' }};">
-                            {{ 'TRUE' if val else 'FALSE' }}
-                        </button>
-                    {% elif col == 'ID' %}
-                        {{ rows[0][col] }}
-                    {% else %}
-                        <div contenteditable="true">{{ rows[0][col] }}</div>
-                    {% endif %}
-                </td>
-            {% endfor %}
-        </tr>
-    </tbody>
+    <tr data-id="{{ rows[0]['ID'] }}">
+        {% for col in columns %}
+            <td data-col="{{ col }}">
+                {% if col == 'Still valid' %}
+                    {% set val = rows[0][col] %}
+                    <label>
+                        <input type="checkbox" name="still_valid" {% if val %}checked{% endif %}>
+                        Still valid
+                    </label>
+                {% elif col == 'ID' %}
+                    {{ rows[0][col] }}
+                {% else %}
+                    <div contenteditable="true">{{ rows[0][col] }}</div>
+                {% endif %}
+            </td>
+        {% endfor %}
+    </tr>
+</tbody>
+
 </table>
 
 <button class="main-action" onclick="saveChanges()">NEXT</button>
@@ -130,9 +129,9 @@
         if (col === 'ID') return;
 
         if (col === 'Still valid') {
-            const btn = cell.querySelector('.bool-toggle');
-            updatedRow[col] = btn.getAttribute('data-value') === 'true';
-        } else {
+    const checkbox = cell.querySelector('input[type="checkbox"]');
+    updatedRow[col] = checkbox && checkbox.checked;
+}        else {
             const div = cell.querySelector('div');
             updatedRow[col] = div ? div.innerText.trim() : null;
         }

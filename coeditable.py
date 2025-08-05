@@ -124,6 +124,22 @@ def update_records():
     except Exception as e:
         print("ERROR in update_records:", str(e))
         return jsonify({"error": str(e)}), 500
+    
+    @app.route('/test_update')
+    def test_update():
+    try:
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor()
+        test_id = 123  # Replace with an actual existing ID
+        cur.execute('UPDATE "coets_appended" SET "Still valid" = FALSE WHERE "ID" = %s;', (test_id,))
+        conn.commit()
+        print(f"Forced update. Rows updated: {cur.rowcount}")
+        cur.close()
+        conn.close()
+        return "OK"
+    except Exception as e:
+        return f"Test failed: {e}"
+
 
 
 
