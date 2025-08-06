@@ -29,11 +29,42 @@
         td[contenteditable] {
             background-color: #222;
         }
+
         td.toggle-boolean {
             cursor: pointer;
             user-select: none;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            position: relative;
             background-color: #222;
         }
+
+        td.toggle-boolean::after {
+            content: '';
+            display: inline-block;
+        }
+
+        td.toggle-boolean.true {
+            background-color: skyblue;
+            color: skyblue; /* hide text */
+        }
+
+        td.toggle-boolean.true::after {
+            content: '✔️';
+            color: white;
+        }
+
+        td.toggle-boolean.false {
+            background-color: red;
+            color: red; /* hide text */
+        }
+
+        td.toggle-boolean.false::after {
+            content: '❌';
+            color: white;
+        }
+
         button {
             margin-top: 1rem;
             padding: 1rem 2rem;
@@ -75,7 +106,11 @@
                             data-col="{{ col }}"
                             {% if col == 'Still valid' %}class="toggle-boolean"{% endif %}
                         >
-                            {{ rows[0][col] }}
+                            {% if col == 'date coet' %}
+                                {{ rows[0][col].strftime('%d %b %Y') }}
+                            {% else %}
+                                {{ rows[0][col] }}
+                            {% endif %}
                         </td>
                     {% endif %}
                 {% endfor %}
@@ -86,15 +121,23 @@
     <button onclick="saveChanges()">NEXT</button>
 
     <script>
-        // Toggle "Still valid" boolean on click
+        function applyBooleanStyles(cell) {
+            const value = cell.innerText.trim().toLowerCase();
+            cell.classList.remove('true', 'false');
+            if (value === 'true') {
+                cell.classList.add('true');
+            } else {
+                cell.classList.add('false');
+            }
+        }
+
         document.querySelectorAll('td.toggle-boolean').forEach(cell => {
+            applyBooleanStyles(cell);
             cell.addEventListener('click', () => {
-                let current = cell.innerText.trim().toLowerCase();
-                if (current === 'true') {
-                    cell.innerText = 'false';
-                } else {
-                    cell.innerText = 'true';
-                }
+                const current = cell.innerText.trim().toLowerCase();
+                const newValue = (current === 'true') ? 'false' : 'true';
+                cell.innerText = newValue;
+                applyBooleanStyles(cell);
             });
         });
 
