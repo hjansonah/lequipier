@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# Database connection configuration
+# Database connection parameters
 conn_params = {
     "host": "dpg-d1l8cgre5dus73fcn8mg-a.frankfurt-postgres.render.com",
     "port": 5432,
@@ -16,113 +16,65 @@ conn_params = {
 
 @app.route("/")
 def index():
-    return navigate_record(direction="next", current_id=None)
-
-@app.route("/navigate")
-def navigate():
-    direction = request.args.get("direction")
-    current_id = request.args.get("current_id")
-    return navigate_record(direction, current_id)
-
-def navigate_record(direction, current_id):
     try:
         conn = psycopg2.connect(**conn_params)
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        if current_id:
-            # Mark current record as reviewed
-            cur.execute(
-                'UPDATE "coets_appended" SET "last_reviewed" = NOW() WHERE "ID" = %s;',
-                (current_id,)
-            )
-            conn.commit()
-
-        if direction == "next":
-            query = '''
-                SELECT * FROM "coets_appended"
-                WHERE ("ID" > %s OR %s IS NULL)
-                AND "last_reviewed" IS NULL
-                ORDER BY "ID" ASC
-                LIMIT 1;
-            '''
-            params = (current_id, current_id)
-        else:
-            query = '''
-                SELECT * FROM "coets_appended"
-                WHERE "ID" < %s
-                AND "last_reviewed" IS NULL
-                ORDER BY "ID" DESC
-                LIMIT 1;
-            '''
-            params = (current_id,)
-
-        cur.execute(query, params)
+        # Fetch the next record with last_reviewed IS NULL
+        query = 'SELECT * FROM "coets_appended" WHERE "last_reviewed" IS NULL ORDER BY "ID" ASC LIMIT 1;'
+        cur.execute(query)
         rows = cur.fetchall()
-        columns = list(rows[0].keys()) if rows else []
+
+        if rows:
+            columns = list(rows[0].keys())
+        else:
+            columns = []
 
         cur.close()
         conn.close()
 
         if not rows:
-            return "<h2>Fin de la liste.</h2>"
+            return "<h2>Tous les enregistrements ont été traités.</h2>"
 
         return render_template("recordeditable.html", rows=rows, columns=columns)
 
     except Exception as e:
         return f"An error occurred: {e}"
 
-@app.route('/update_records', methods=['POST'])
+@app.route("/update_records", methods=["POST"])
 def update_records():
     try:
-        # Debug log raw request data
-        print("RAW PAYLOAD:", request.get_data(as_text=True))
-
-        data = request.get_json()
-        print("Parsed JSON:", data)
-
-        updates = data.get('updates', [])
-        if not updates:
-            return jsonify({"error": "No updates received"}), 400
+        data = request.json
+        updates = data.get("updates", [])
 
         conn = psycopg2.connect(**conn_params)
         cur = conn.cursor()
 
         for row in updates:
-            id_ = row.get('ID')
-            if not id_:
+            row_id = row.get("ID")
+            if not row_id:
                 continue
 
-            columns = []
-            values = []
+            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
+            values = [row[col] for col in columns]
 
-            for key, val in row.items():
-                if key == 'ID':
-                    continue
-                if key == 'Still valid':
-                    val = True if str(val).lower() in ['true', '1'] else False
-                columns.append(f'"{key}" = %s')
-                values.append(val)
+            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
+            if set_clause:
+                set_clause += ', '
+            set_clause += '"last_reviewed" = NOW()'
 
-            if columns:
-                query = f'UPDATE "coets_appended" SET {", ".join(columns)} WHERE "ID" = %s;'
-                values.append(id_)
-                print("Executing SQL:", query)
-                print("With values:", values)
-                cur.execute(query, values)
-                print(f"Updated rows: {cur.rowcount}")
+            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
+            cur.execute(query, values + [row_id])
 
         conn.commit()
         cur.close()
         conn.close()
 
-        return jsonify({"status": "success"})
+        # After update, return success and trigger frontend redirect
+        return jsonify({"message": "Record updated successfully. Redirecting..."})
 
     except Exception as e:
-        print("ERROR in update_records:", str(e))
-        return jsonify({"error": str(e)}), 500
-
+        return jsonify({"message": f"Error updating records: {e}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-i can modify it on the web, but the change doesn't appear afterward in the database (postgresssql)
