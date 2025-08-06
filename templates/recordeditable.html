@@ -36,13 +36,13 @@
         }
         button {
             margin-top: 1rem;
-            padding: 1rem 2rem;       /* bouton plus grand */
-            font-size: 1.2rem;        /* texte plus grand */
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
             font-weight: bold;
             background-color: #333;
             color: #fff;
             border: none;
-            border-radius: 6px;       /* coins arrondis */
+            border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
@@ -60,20 +60,24 @@
         <thead>
             <tr>
                 {% for col in columns %}
-                    <th>{{ col }}</th>
+                    {% if col not in ['date added', 'Appli count', 'ID', 'ExtractorCode', 'last_reviewed'] %}
+                        <th>{{ col }}</th>
+                    {% endif %}
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
             <tr data-id="{{ rows[0]['ID'] }}">
                 {% for col in columns %}
-                    <td 
-                        contenteditable="{{ 'false' if col == 'ID' or col == 'Still valid' else 'true' }}" 
-                        data-col="{{ col }}"
-                        {% if col == 'Still valid' %}class="toggle-boolean"{% endif %}
-                    >
-                        {{ rows[0][col] }}
-                    </td>
+                    {% if col not in ['date added', 'Appli count', 'ID', 'ExtractorCode', 'last_reviewed'] %}
+                        <td 
+                            contenteditable="{{ 'false' if col == 'Still valid' else 'true' }}" 
+                            data-col="{{ col }}"
+                            {% if col == 'Still valid' %}class="toggle-boolean"{% endif %}
+                        >
+                            {{ rows[0][col] }}
+                        </td>
+                    {% endif %}
                 {% endfor %}
             </tr>
         </tbody>
@@ -102,9 +106,7 @@
             const updatedRow = { ID: id };
             cells.forEach(cell => {
                 const col = cell.getAttribute('data-col');
-                if (col !== 'ID') {
-                    updatedRow[col] = cell.innerText.trim();
-                }
+                updatedRow[col] = cell.innerText.trim();
             });
 
             fetch('/update_records', {
