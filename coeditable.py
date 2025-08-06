@@ -16,45 +16,45 @@ conn_params = {
 
 @app.route("/")
 def index():
-    return navigate_record(direction="next", current_coet_id=None)
+    return navigate_record(direction="next", current_id=None)
 
 @app.route("/navigate")
 def navigate():
     direction = request.args.get("direction")
-    current_coet_id = request.args.get("current_coet_id")
-    return navigate_record(direction, current_coet_id)
+    current_id = request.args.get("current_id")
+    return navigate_record(direction, current_id)
 
-def navigate_record(direction, current_coet_id):
+def navigate_record(direction, current_id):
     try:
         conn = psycopg2.connect(**conn_params)
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        if current_coet_id:
+        if current_id:
             # Mark current record as reviewed
             cur.execute(
-                'UPDATE "coets_appended" SET last_reviewed = NOW() WHERE "Coet ID" = %s;',
-                (current_coet_id,)
+                'UPDATE "coets_appended" SET "last_reviewed" = NOW() WHERE "ID" = %s;',
+                (current_id,)
             )
             conn.commit()
 
         if direction == "next":
             query = '''
                 SELECT * FROM "coets_appended"
-                WHERE ("Coet ID" > %s OR %s IS NULL)
-                AND last_reviewed IS NULL
-                ORDER BY "Coet ID" ASC
+                WHERE ("ID" > %s OR %s IS NULL)
+                AND "last_reviewed" IS NULL
+                ORDER BY "ID" ASC
                 LIMIT 1;
             '''
-            params = (current_coet_id, current_coet_id)
+            params = (current_id, current_id)
         else:
             query = '''
                 SELECT * FROM "coets_appended"
-                WHERE "Coet ID" < %s
-                AND last_reviewed IS NULL
-                ORDER BY "Coet ID" DESC
+                WHERE "ID" < %s
+                AND "last_reviewed" IS NULL
+                ORDER BY "ID" DESC
                 LIMIT 1;
             '''
-            params = (current_coet_id,)
+            params = (current_id,)
 
         cur.execute(query, params)
         rows = cur.fetchall()
@@ -88,15 +88,15 @@ def update_records():
         cur = conn.cursor()
 
         for row in updates:
-            coet_id = row.get('Coet ID')
-            if not coet_id:
+            id_ = row.get('ID')
+            if not id_:
                 continue
 
             columns = []
             values = []
 
             for key, val in row.items():
-                if key == 'Coet ID':
+                if key == 'ID':
                     continue
                 if key == 'Still valid':
                     val = True if str(val).lower() in ['true', '1'] else False
@@ -104,8 +104,8 @@ def update_records():
                 values.append(val)
 
             if columns:
-                query = f'UPDATE "coets_appended" SET {", ".join(columns)} WHERE "Coet ID" = %s;'
-                values.append(coet_id)
+                query = f'UPDATE "coets_appended" SET {", ".join(columns)} WHERE "ID" = %s;'
+                values.append(id_)
                 print("Executing SQL:", query)
                 print("With values:", values)
                 cur.execute(query, values)
@@ -124,3 +124,5 @@ def update_records():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+i can modify it on the web, but the change doesn't appear afterward in the database (postgresssql)
