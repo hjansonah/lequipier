@@ -29,22 +29,27 @@
         td[contenteditable] {
             background-color: #222;
         }
-   button {
-    margin-top: 1rem;
-    padding: 1rem 2rem;       /* bouton plus grand */
-    font-size: 1.2rem;        /* texte plus grand */
-    font-weight: bold;
-    background-color: #333;
-    color: #fff;
-    border: none;
-    border-radius: 6px;       /* coins arrondis */
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+        td.toggle-boolean {
+            cursor: pointer;
+            user-select: none;
+            background-color: #222;
+        }
+        button {
+            margin-top: 1rem;
+            padding: 1rem 2rem;       /* bouton plus grand */
+            font-size: 1.2rem;        /* texte plus grand */
+            font-weight: bold;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 6px;       /* coins arrondis */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-button:hover {
-    background-color: #555;
-}
+        button:hover {
+            background-color: #555;
+        }
     </style>
 </head>
 <body>
@@ -62,7 +67,11 @@ button:hover {
         <tbody>
             <tr data-id="{{ rows[0]['ID'] }}">
                 {% for col in columns %}
-                    <td contenteditable="{{ 'false' if col == 'ID' else 'true' }}" data-col="{{ col }}">
+                    <td 
+                        contenteditable="{{ 'false' if col == 'ID' or col == 'Still valid' else 'true' }}" 
+                        data-col="{{ col }}"
+                        {% if col == 'Still valid' %}class="toggle-boolean"{% endif %}
+                    >
                         {{ rows[0][col] }}
                     </td>
                 {% endfor %}
@@ -73,34 +82,43 @@ button:hover {
     <button onclick="saveChanges()">NEXT</button>
 
     <script>
+        // Toggle "Still valid" boolean on click
+        document.querySelectorAll('td.toggle-boolean').forEach(cell => {
+            cell.addEventListener('click', () => {
+                let current = cell.innerText.trim().toLowerCase();
+                if (current === 'true') {
+                    cell.innerText = 'false';
+                } else {
+                    cell.innerText = 'true';
+                }
+            });
+        });
+
         function saveChanges() {
-    const row = document.querySelector('#recordsTable tbody tr');
-    const id = row.getAttribute('data-id');
-    const cells = row.querySelectorAll('td');
+            const row = document.querySelector('#recordsTable tbody tr');
+            const id = row.getAttribute('data-id');
+            const cells = row.querySelectorAll('td');
 
-    const updatedRow = { ID: id };
-    cells.forEach(cell => {
-        const col = cell.getAttribute('data-col');
-        if (col !== 'ID') {
-            updatedRow[col] = cell.innerText.trim();
+            const updatedRow = { ID: id };
+            cells.forEach(cell => {
+                const col = cell.getAttribute('data-col');
+                if (col !== 'ID') {
+                    updatedRow[col] = cell.innerText.trim();
+                }
+            });
+
+            fetch('/update_records', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ updates: [updatedRow] })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Erreur réseau');
+                window.location.href = "/";
+            })
+            .catch(error => alert('Erreur : ' + error));
         }
-    });
-
-    fetch('/update_records', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ updates: [updatedRow] })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Erreur réseau');
-        // On ignore le contenu JSON renvoyé (pas besoin de lire data.message)
-        window.location.href = "/";
-    })
-    .catch(error => alert('Erreur : ' + error));
-}
-
-</script>
-
+    </script>
 
 </body>
 </html>
