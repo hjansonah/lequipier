@@ -85,13 +85,13 @@
 </head>
 <body>
 
-    <h1>Coët – Enregistrement ID {{ rows[0]['ID'] }}</h1>
+    <h1>Coëts</h1>
 
     <table id="recordsTable">
         <thead>
             <tr>
                 {% for col in columns %}
-                    {% if col not in ['date added', 'Appli count', 'ID', 'ExtractorCode', 'last_reviewed'] %}
+                    {% if col not in ['date added', 'Appli count', 'ID', 'Coet ID', 'ExtractorCode', 'last_reviewed'] %}
                         <th>{{ col }}</th>
                     {% endif %}
                 {% endfor %}
@@ -100,7 +100,7 @@
         <tbody>
             <tr data-id="{{ rows[0]['ID'] }}">
                 {% for col in columns %}
-                    {% if col not in ['date added', 'Appli count', 'ID', 'ExtractorCode', 'last_reviewed'] %}
+                    {% if col not in ['date added', 'Appli count', 'ID', 'Coet ID', 'ExtractorCode', 'last_reviewed'] %}
                         <td 
                             contenteditable="{{ 'false' if col == 'Still valid' else 'true' }}" 
                             data-col="{{ col }}"
