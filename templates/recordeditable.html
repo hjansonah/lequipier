@@ -4,18 +4,22 @@
     <meta charset="UTF-8">
     <title>Coët Record {{ rows[0]['ID'] }}</title>
     <style>
-        body {
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
             font-family: Arial, sans-serif;
             background-color: #111;
             color: #fff;
-            padding: 2rem;
+            display: flex;
+            flex-direction: column;
         }
 
         h1 {
             text-align: center;
             font-size: 2.5rem;
             color: white;
-            margin-bottom: 2rem;
+            margin-top: 2rem;
         }
 
         .record-container {
@@ -23,7 +27,9 @@
             flex-direction: column;
             gap: 1.5rem;
             max-width: 600px;
-            margin: 0 auto;
+            margin: 2rem auto;
+            width: 90%;
+            flex-grow: 1;
         }
 
         .record-row {
@@ -35,6 +41,12 @@
             padding: 1rem;
         }
 
+        .record-row[data-col="Coet"] {
+            font-size: 2rem;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+
         .record-row[data-col="Still valid"] {
             cursor: pointer;
             user-select: none;
@@ -42,7 +54,7 @@
             font-weight: bold;
             text-align: center;
             background-color: #222;
-            color: #222; /* hidden by default */
+            color: #222; /* hidden */
             position: relative;
         }
 
@@ -76,16 +88,21 @@
             background-color: #222;
         }
 
+        .button-container {
+            width: 100%;
+            text-align: center;
+            padding: 2rem 0;
+            background-color: #111;
+        }
+
         button {
-            display: block;
-            margin: 3rem auto 0 auto;
-            padding: 1.2rem 3rem;
-            font-size: 1.3rem;
+            padding: 1.5rem 4rem;
+            font-size: 1.5rem;
             font-weight: bold;
             background-color: #333;
             color: #fff;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
@@ -117,7 +134,9 @@
     {% endfor %}
 </div>
 
-<button onclick="saveChanges()">NEXT</button>
+<div class="button-container">
+    <button onclick="saveChanges()">NEXT</button>
+</div>
 
 <script>
     function applyBooleanStyles(cell) {
