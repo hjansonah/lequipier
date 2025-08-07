@@ -175,9 +175,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ updates: [updatedRow] })
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Erreur réseau');
-            window.location.href = "/";
+        window.location.href = "/records";
+
         })
         .catch(error => alert('Erreur : ' + error));
     }
