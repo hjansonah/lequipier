@@ -1,186 +1,72 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Coët Record {{ rows[0]['ID'] }}</title>
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #111;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-        }
+import psycopg2
+import psycopg2.extras
+from flask import Flask, render_template, request, jsonify
 
-        h1 {
-            text-align: center;
-            font-size: 2.5rem;
-            color: white;
-            margin-top: 2rem;
-        }
+app = Flask(__name__)
 
-        .record-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            max-width: 600px;
-            margin: 2rem auto;
-            width: 90%;
-            flex-grow: 1;
-        }
+conn_params = {
+    "host": "dpg-d1l8cgre5dus73fcn8mg-a.frankfurt-postgres.render.com",
+    "port": 5432,
+    "dbname": "flask_coets_db_0qzt",
+    "user": "flask_coets_db_0qzt_user",
+    "password": "vx9DALf0LaxT4bRKpsA2GssaxSA8sN16",
+    "sslmode": "require"
+}
 
-        .record-row {
-            display: flex;
-            flex-direction: column;
-            background-color: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 1rem;
-        }
+@app.route("/")
+def home():
+    return render_template("index.html")
 
-        .record-row[data-col="Coet"] {
-            font-size: 2rem;
-            font-weight: bold;
-            line-height: 1.4;
-        }
+@app.route("/records")
+def records():
+    try:
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT * FROM "coets_appended" WHERE "last_reviewed" IS NULL ORDER BY "ID" ASC LIMIT 1;')
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
 
-        .record-row[data-col="Still valid"] {
-            cursor: pointer;
-            user-select: none;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            background-color: #222;
-            color: #222; /* hidden */
-            position: relative;
-        }
+        if not rows:
+            return "<h2>Tous les enregistrements ont été traités.</h2>"
 
-        .record-row[data-col="Still valid"].true {
-            background-color: skyblue;
-            color: skyblue;
-        }
+        columns = list(rows[0].keys())
+        return render_template("recordeditable.html", rows=rows, columns=columns)
 
-        .record-row[data-col="Still valid"].true::after {
-            content: '✔️';
-            color: white;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
+    except Exception as e:
+        return f"An error occurred: {e}"
 
-        .record-row[data-col="Still valid"].false {
-            background-color: red;
-            color: red;
-        }
+@app.route("/update_records", methods=["POST"])
+def update_records():
+    try:
+        data = request.json
+        updates = data.get("updates", [])
+        conn = psycopg2.connect(**conn_params)
+        cur = conn.cursor()
 
-        .record-row[data-col="Still valid"].false::after {
-            content: '❌';
-            color: white;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
+        for row in updates:
+            row_id = row.get("ID")
+            if not row_id:
+                continue
 
-        .record-row[contenteditable="true"] {
-            background-color: #222;
-        }
+            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
+            values = [row[col] for col in columns]
 
-        .button-container {
-            width: 100%;
-            text-align: center;
-            padding: 2rem 0;
-            background-color: #111;
-        }
+            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
+            if set_clause:
+                set_clause += ", "
+            set_clause += '"last_reviewed" = NOW()'
 
-        button {
-            padding: 1.5rem 4rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            background-color: #333;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
+            cur.execute(query, values + [row_id])
 
-        button:hover {
-            background-color: #555;
-        }
-    </style>
-</head>
-<body>
+        conn.commit()
+        cur.close()
+        conn.close()
 
-<h1>Coëts</h1>
+        return jsonify({"message": "Record updated successfully."})
+    except Exception as e:
+        return jsonify({"message": f"Error updating records: {e}"}), 500
 
-<div class="record-container" data-id="{{ rows[0]['ID'] }}">
-    {% for col in columns %}
-        {% if col not in ['date added', 'Appli count', 'ID', 'Coet ID', 'ExtractorCode', 'last_reviewed'] %}
-            <div 
-                class="record-row {% if col == 'Still valid' %}toggle-boolean{% endif %}" 
-                data-col="{{ col }}"
-                contenteditable="{{ 'false' if col == 'Still valid' else 'true' }}"
-            >
-                {% if col == 'date coet' %}
-                    {{ rows[0][col].strftime('%d %b %Y') }}
-                {% else %}
-                    {{ rows[0][col] }}
-                {% endif %}
-            </div>
-        {% endif %}
-    {% endfor %}
-</div>
-
-<div class="button-container">
-    <button onclick="saveChanges()">NEXT</button>
-</div>
-
-<script>
-    function applyBooleanStyles(cell) {
-        const value = cell.innerText.trim().toLowerCase();
-        cell.classList.remove('true', 'false');
-        if (value === 'true') {
-            cell.classList.add('true');
-        } else {
-            cell.classList.add('false');
-        }
-    }
-
-    document.querySelectorAll('.toggle-boolean').forEach(cell => {
-        applyBooleanStyles(cell);
-        cell.addEventListener('click', () => {
-            const current = cell.innerText.trim().toLowerCase();
-            const newValue = (current === 'true') ? 'false' : 'true';
-            cell.innerText = newValue;
-            applyBooleanStyles(cell);
-        });
-    });
-
-    function saveChanges() {
-        const container = document.querySelector('.record-container');
-        const id = container.getAttribute('data-id');
-        const cells = container.querySelectorAll('.record-row');
-
-        const updatedRow = { ID: id };
-        cells.forEach(cell => {
-            const col = cell.getAttribute('data-col');
-            updatedRow[col] = cell.innerText.trim();
-        });
-
-        fetch('/update_records', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ updates: [updatedRow] })
-        })
-        window.location.href = "/records";
-
-        })
-        .catch(error => alert('Erreur : ' + error));
-    }
-</script>
-
-</body>
-</html>
+if __name__ == "__main__":
+    app.run(debug=True)
