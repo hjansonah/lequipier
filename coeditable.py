@@ -15,12 +15,7 @@ conn_params = {
 }
 
 @app.route("/")
-def home():
-    # New homepage serving index.html
-    return render_template("index.html")
-
-@app.route("/records")
-def records():
+def index():
     try:
         conn = psycopg2.connect(**conn_params)
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)

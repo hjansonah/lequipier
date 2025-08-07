@@ -1,72 +1,168 @@
-import psycopg2
-import psycopg2.extras
-from flask import Flask, render_template, request, jsonify
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coët Record {{ rows[0]['ID'] }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: #fff;
+            padding: 2rem;
+        }
 
-app = Flask(__name__)
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 2rem;
+        }
 
-conn_params = {
-    "host": "dpg-d1l8cgre5dus73fcn8mg-a.frankfurt-postgres.render.com",
-    "port": 5432,
-    "dbname": "flask_coets_db_0qzt",
-    "user": "flask_coets_db_0qzt_user",
-    "password": "vx9DALf0LaxT4bRKpsA2GssaxSA8sN16",
-    "sslmode": "require"
-}
+        .record-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
 
-@app.route("/")
-def home():
-    return render_template("index.html")
+        .record-row {
+            display: flex;
+            flex-direction: column;
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+        }
 
-@app.route("/records")
-def records():
-    try:
-        conn = psycopg2.connect(**conn_params)
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute('SELECT * FROM "coets_appended" WHERE "last_reviewed" IS NULL ORDER BY "ID" ASC LIMIT 1;')
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
+        .record-row[data-col="Still valid"] {
+            cursor: pointer;
+            user-select: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            background-color: #222;
+            color: #222; /* hidden by default */
+            position: relative;
+        }
 
-        if not rows:
-            return "<h2>Tous les enregistrements ont été traités.</h2>"
+        .record-row[data-col="Still valid"].true {
+            background-color: skyblue;
+            color: skyblue;
+        }
 
-        columns = list(rows[0].keys())
-        return render_template("recordeditable.html", rows=rows, columns=columns)
+        .record-row[data-col="Still valid"].true::after {
+            content: '✔️';
+            color: white;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
 
-    except Exception as e:
-        return f"An error occurred: {e}"
+        .record-row[data-col="Still valid"].false {
+            background-color: red;
+            color: red;
+        }
 
-@app.route("/update_records", methods=["POST"])
-def update_records():
-    try:
-        data = request.json
-        updates = data.get("updates", [])
-        conn = psycopg2.connect(**conn_params)
-        cur = conn.cursor()
+        .record-row[data-col="Still valid"].false::after {
+            content: '❌';
+            color: white;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
 
-        for row in updates:
-            row_id = row.get("ID")
-            if not row_id:
-                continue
+        .record-row[contenteditable="true"] {
+            background-color: #222;
+        }
 
-            columns = [k for k in row.keys() if k != "ID" and k != "last_reviewed"]
-            values = [row[col] for col in columns]
+        button {
+            display: block;
+            margin: 3rem auto 0 auto;
+            padding: 1.2rem 3rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-            set_clause = ", ".join([f'"{col}" = %s' for col in columns])
-            if set_clause:
-                set_clause += ", "
-            set_clause += '"last_reviewed" = NOW()'
+        button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
 
-            query = f'UPDATE "coets_appended" SET {set_clause} WHERE "ID" = %s'
-            cur.execute(query, values + [row_id])
+<h1>Coëts</h1>
 
-        conn.commit()
-        cur.close()
-        conn.close()
+<div class="record-container" data-id="{{ rows[0]['ID'] }}">
+    {% for col in columns %}
+        {% if col not in ['date added', 'Appli count', 'ID', 'Coet ID', 'ExtractorCode', 'last_reviewed'] %}
+            <div 
+                class="record-row {% if col == 'Still valid' %}toggle-boolean{% endif %}" 
+                data-col="{{ col }}"
+                contenteditable="{{ 'false' if col == 'Still valid' else 'true' }}"
+            >
+                {% if col == 'date coet' %}
+                    {{ rows[0][col].strftime('%d %b %Y') }}
+                {% else %}
+                    {{ rows[0][col] }}
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
 
-        return jsonify({"message": "Record updated successfully."})
-    except Exception as e:
-        return jsonify({"message": f"Error updating records: {e}"}), 500
+<button onclick="saveChanges()">NEXT</button>
 
-if __name__ == "__main__":
-    app.run(debug=True)
+<script>
+    function applyBooleanStyles(cell) {
+        const value = cell.innerText.trim().toLowerCase();
+        cell.classList.remove('true', 'false');
+        if (value === 'true') {
+            cell.classList.add('true');
+        } else {
+            cell.classList.add('false');
+        }
+    }
+
+    document.querySelectorAll('.toggle-boolean').forEach(cell => {
+        applyBooleanStyles(cell);
+        cell.addEventListener('click', () => {
+            const current = cell.innerText.trim().toLowerCase();
+            const newValue = (current === 'true') ? 'false' : 'true';
+            cell.innerText = newValue;
+            applyBooleanStyles(cell);
+        });
+    });
+
+    function saveChanges() {
+        const container = document.querySelector('.record-container');
+        const id = container.getAttribute('data-id');
+        const cells = container.querySelectorAll('.record-row');
+
+        const updatedRow = { ID: id };
+        cells.forEach(cell => {
+            const col = cell.getAttribute('data-col');
+            updatedRow[col] = cell.innerText.trim();
+        });
+
+        fetch('/update_records', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates: [updatedRow] })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur réseau');
+            window.location.href = "/";
+        })
+        .catch(error => alert('Erreur : ' + error));
+    }
+</script>
+
+</body>
+</html>
