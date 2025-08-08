@@ -31,7 +31,7 @@ def records():
         if not rows:
             return "<h2>Tous les enregistrements ont été traités.</h2>"
 
-        return render_template("coets.html", rows=rows, columns=columns)
+        return render_template("recordeditable.html", rows=rows, columns=columns)
 
     except Exception as e:
         return f"An error occurred: {e}"
