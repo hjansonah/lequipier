@@ -4,24 +4,50 @@
     <title>My Simple App</title>
     <style>
         body {
-            background-color: #121212; /* dark background */
-            color: #f0f0f0; /* light text */
+            background-color: #121212;
+            color: #f0f0f0;
             font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
         }
 
-        a {
-            color: #80cbc4; /* soft cyan for links */
+        h1 {
+            font-size: 2em;
+            margin-bottom: 40px;
+        }
+
+        .big-button {
+            display: inline-block;
+            background-color: #1e88e5;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 1.5em;
             text-decoration: none;
+            transition: background-color 0.3s;
         }
 
-        a:hover {
-            text-decoration: underline;
+        .big-button:hover {
+            background-color: #1565c0;
+        }
+
+        .big-button span {
+            font-size: 2em;
+            margin-right: 10px;
+            vertical-align: middle;
         }
     </style>
 </head>
 <body>
     <h1>Hello Johann! Well, it's looking fine now, isn't it?</h1>
 
-    <p><a href="records">Pour les matches ATP, c'est ici</a></p>
+    <a href="records" class="big-button">
+        <span>🎾</span> Accéder aux Coëts
+    </a>
 </body>
 </html>
