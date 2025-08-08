@@ -158,7 +158,7 @@
         })
         .then(response => {
             if (!response.ok) throw new Error('Erreur réseau');
-            window.location.href = "/";
+            window.location.href = "/records";  // <-- redirect here, not "/"
         })
         .catch(error => alert('Erreur : ' + error));
     }
