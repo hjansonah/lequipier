@@ -21,7 +21,7 @@ def index():
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         # Fetch the next record with last_reviewed IS NULL
-        query = 'SELECT * FROM "coets_appended" WHERE "last_reviewed" IS NULL ORDER BY "ID" ASC LIMIT 1;'
+        query = 'SELECT * FROM "coets_appended" WHERE "last_reviewed" IS NULL ORDER BY "ExtractorCode" ASC LIMIT 1;'
         cur.execute(query)
         rows = cur.fetchall()
 
