@@ -20,7 +20,7 @@ def records():
         conn = psycopg2.connect(**conn_params)
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        query = 'SELECT * FROM "coets_appended" WHERE "last_reviewed" IS NULL ORDER BY "ID" ASC LIMIT 1;'
+        query = 'SELECT * FROM "coets_appended" WHERE "last_reviewed" IS NULL ORDER BY "ExtractorCode" ASC LIMIT 1;'
         cur.execute(query)
         rows = cur.fetchall()
         columns = list(rows[0].keys()) if rows else []
