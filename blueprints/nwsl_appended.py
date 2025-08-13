@@ -1,8 +1,9 @@
 import psycopg2
 import psycopg2.extras
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, jsonify
 
-records_bp = Blueprint('nwsl_appended', __name__)
+# Create the blueprint
+nwsl_appended_bp = Blueprint('nwsl_appended', __name__)
 
 # Database connection parameters
 conn_params = {
@@ -34,13 +35,4 @@ def nwsl_appended():
         return render_template("nwsl_appended.html", rows=rows, columns=columns)
 
     except Exception as e:
-        return f"An error occurred: {e}"
-
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        return jsonify({"message": "Record updated successfully. Redirecting..."})
-
-    except Exception as e:
-        return jsonify({"message": f"Error updating records: {e}"}), 500
+        return jsonify({"error": str(e)}), 500
