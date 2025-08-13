@@ -1,77 +1,136 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Table: nwsl_appended</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background: #f9f9f9;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            background: #fff;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #d60000;
-            color: #fff;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        a {
-            color: #d60000;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Table: nwsl_appended</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f9f9f9;
+      color: #222;
+    }
+
+    h2 {
+      text-align: center;
+      color: #444;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: white;
+      margin-bottom: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .section-title {
+      background-color: red;
+      color: white;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 14px 16px;
+      font-size: 1.1rem;
+    }
+
+    .section-text {
+      padding: 12px 16px;
+      font-size: 1rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #d60000;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    a {
+      color: #d60000;
+      text-decoration: none;
+      word-break: break-word;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media screen and (max-width: 600px) {
+      .section-title {
+        font-size: 1rem;
+        padding: 12px;
+      }
+
+      .section-text {
+        padding: 10px 12px;
+        font-size: 0.95rem;
+      }
+
+      th, td {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<h1>Table: nwsl_appended</h1>
+<h2>Table: nwsl_appended</h2>
 
-<table>
-    <thead>
+<div class="section">
+  <div class="section-title">Résultats de la base de données</div>
+  <div class="section-text">
+    {% if rows %}
+    <table>
+      <thead>
         <tr>
-            {% for col in columns %}
-                <th>{{ col }}</th>
-            {% endfor %}
+          {% for col in columns %}
+            <th>{{ col }}</th>
+          {% endfor %}
         </tr>
-    </thead>
-    <tbody>
+      </thead>
+      <tbody>
         {% for row in rows %}
-            <tr>
-                {% for col in columns %}
-                    {% if col|lower == "link" %}
-                        <td>
-                            {% if row[col] %}
-                                <a href="{{ row[col] }}" target="_blank">{{ row[col] }}</a>
-                            {% else %}
-                                &nbsp;
-                            {% endif %}
-                        </td>
-                    {% else %}
-                        <td>{{ row[col] }}</td>
-                    {% endif %}
-                {% endfor %}
-            </tr>
+          <tr>
+            {% for col in columns %}
+              {% if col|lower == "link" %}
+                <td>
+                  {% if row[col] %}
+                    <a href="{{ row[col] }}" target="_blank">{{ row[col] }}</a>
+                  {% endif %}
+                </td>
+              {% else %}
+                <td>{{ row[col] }}</td>
+              {% endif %}
+            {% endfor %}
+          </tr>
         {% endfor %}
-    </tbody>
-</table>
+      </tbody>
+    </table>
+    {% else %}
+      <p>Aucun enregistrement trouvé.</p>
+    {% endif %}
+  </div>
+</div>
 
 </body>
 </html>
