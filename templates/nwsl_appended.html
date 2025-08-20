@@ -115,13 +115,13 @@
       {% if col|lower == "link" %}
         <td>
           {% if row[col] %}
-            <a href="{{ row[col] | safe }}" target="_blank">
-              {{ row[col] | safe }}
+            <a href="{{ row[col] }}" target="_blank">
+              {{ row[col] }}
             </a>
           {% endif %}
         </td>
       {% else %}
-        <td>{{ row[col] | safe }}</td>
+        <td>{{ row[col] }}</td>
       {% endif %}
     {% endfor %}
   </tr>
