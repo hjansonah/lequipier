@@ -110,20 +110,22 @@
       </thead>
       <tbody>
         {% for row in rows %}
-          <tr>
-            {% for col in columns %}
-              {% if col|lower == "link" %}
-                <td>
-                  {% if row[col] %}
-                    <a href="{{ row[col] }}" target="_blank">{{ row[col] }}</a>
-                  {% endif %}
-                </td>
-              {% else %}
-                <td>{{ row[col] }}</td>
-              {% endif %}
-            {% endfor %}
-          </tr>
-        {% endfor %}
+  <tr>
+    {% for col in columns %}
+      {% if col|lower == "link" %}
+        <td>
+          {% if row[col] %}
+            <a href="{{ row[col] | safe }}" target="_blank">
+              {{ row[col] | safe }}
+            </a>
+          {% endif %}
+        </td>
+      {% else %}
+        <td>{{ row[col] | safe }}</td>
+      {% endif %}
+    {% endfor %}
+  </tr>
+{% endfor %}
       </tbody>
     </table>
     {% else %}
