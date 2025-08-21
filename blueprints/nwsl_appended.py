@@ -33,6 +33,14 @@ def nwsl_appended():
             return "<h2>Tous les enregistrements ont été traités.</h2>"
 
         return render_template("nwsl_appended.html", rows=rows, columns=columns)
+        
+@nwsl_appended_bp.route("/reglementanciens")
+def reglementanciens():
+    return render_template("reglementanciens.html")
+
+@nwsl_appended_bp.route("/statutsanciens")
+def statutsanciens():
+    return render_template("statutsanciens.html")
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
