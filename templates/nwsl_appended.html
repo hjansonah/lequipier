@@ -19,51 +19,23 @@
       margin-bottom: 30px;
     }
 
-    .section {
+    .card {
       background: white;
       margin-bottom: 24px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      overflow: hidden;
+      padding: 16px;
     }
 
-    .section-title {
-      background-color: red;
-      color: white;
-      font-weight: bold;
-      text-transform: uppercase;
-      padding: 14px 16px;
-      font-size: 1.1rem;
+    .field {
+      margin-bottom: 12px;
     }
 
-    .section-text {
-      padding: 12px 16px;
+    .field strong {
+      display: block;
+      color: #d60000;
+      margin-bottom: 4px;
       font-size: 1rem;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      overflow-x: auto;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background: white;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px 12px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th {
-      background-color: #d60000;
-      color: white;
-    }
-
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
     }
 
     a {
@@ -75,63 +47,47 @@
     a:hover {
       text-decoration: underline;
     }
-
-    @media screen and (max-width: 600px) {
-      .section-title {
-        font-size: 1rem;
-        padding: 12px;
-      }
-
-      .section-text {
-        padding: 10px 12px;
-        font-size: 0.95rem;
-      }
-
-      th, td {
-        font-size: 0.9rem;
-      }
-    }
   </style>
 </head>
 <body>
 
 <h2>Table: nwsl_appended</h2>
 
-<div class="section">
-  <div class="section-title">Résultats de la base de données</div>
-  <div class="section-text">
-    {% if rows %}
-    <table>
-      <thead>
-        <tr>
-          {% for col in columns %}
-            <th>{{ col }}</th>
-          {% endfor %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in rows %}
-          <tr>
-            {% for col in columns %}
-              {% if col|lower == "link" %}
-                <td>
-                  {% if row[col] %}
-                    <a href="{{ row[col] }}" target="_blank">{{ row[col] }}</a>
-                  {% endif %}
-                </td>
-              {% else %}
-                <td>{{ row[col] | safe }}</td>
-              {% endif %}
-            {% endfor %}
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-      <p>Aucun enregistrement trouvé.</p>
-    {% endif %}
-  </div>
-</div>
+{% if rows %}
+  {% for row in rows %}
+    <div class="card">
+      {% if row['rubriques'] %}
+      <div class="field">
+        <strong>Rubrique</strong>
+        {{ row['rubriques'] }}
+      </div>
+      {% endif %}
+
+      {% if row['title'] %}
+      <div class="field">
+        <strong>Title</strong>
+        {{ row['title'] }}
+      </div>
+      {% endif %}
+
+      {% if row['text'] %}
+      <div class="field">
+        <strong>Text</strong>
+        <div>{{ row['text'] | safe }}</div>
+      </div>
+      {% endif %}
+
+      {% if row['link'] %}
+      <div class="field">
+        <strong>Link</strong>
+        <a href="{{ row['link'] }}" target="_blank">{{ row['link'] }}</a>
+      </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <p>Aucun enregistrement trouvé.</p>
+{% endif %}
 
 </body>
 </html>
