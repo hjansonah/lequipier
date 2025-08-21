@@ -1,93 +1,54 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Table: nwsl_appended</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 16px;
-      background: #f9f9f9;
-      color: #222;
-    }
+<html>
+  <body style="font-family: Arial, Helvetica, sans-serif; margin:0; padding:16px; background-color:#f9f9f9; color:#222;">
 
-    h2 {
-      text-align: center;
-      color: #444;
-      margin-bottom: 30px;
-    }
+    <h2 style="text-align:center; color:#444; margin-bottom:24px;">Table: nwsl_appended</h2>
 
-    .card {
-      background: white;
-      margin-bottom: 24px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 16px;
-    }
+    {% if rows %}
+      {% for row in rows %}
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:20px; border:1px solid #ddd; background-color:#ffffff;">
+          <!-- Rubrique -->
+          {% if row['rubriques'] %}
+          <tr>
+            <td style="background-color:#d60000; color:#ffffff; font-weight:bold; font-size:14px; padding:10px 16px; text-transform:uppercase;">
+              {{ row['rubriques'] }}
+            </td>
+          </tr>
+          {% endif %}
 
-    .field {
-      margin-bottom: 12px;
-    }
+          <!-- Title -->
+          {% if row['title'] %}
+          <tr>
+            <td style="padding:12px 16px; font-size:18px; font-weight:bold; color:#222;">
+              {{ row['title'] }}
+            </td>
+          </tr>
+          {% endif %}
 
-    .field strong {
-      display: block;
-      color: #d60000;
-      margin-bottom: 4px;
-      font-size: 1rem;
-    }
+          <!-- Text -->
+          {% if row['text'] %}
+          <tr>
+            <td style="padding:12px 16px; font-size:14px; line-height:1.5; color:#333;">
+              {{ row['text'] | safe }}
+            </td>
+          </tr>
+          {% endif %}
 
-    a {
-      color: #d60000;
-      text-decoration: none;
-      word-break: break-word;
-    }
+          <!-- Link -->
+          {% if row['link'] %}
+          <tr>
+            <td style="padding:12px 16px; font-size:14px;">
+              <a href="{{ row['link'] }}" target="_blank" style="color:#d60000; text-decoration:none; word-break:break-word;">
+                {{ row['link'] }}
+              </a>
+            </td>
+          </tr>
+          {% endif %}
+        </table>
+      {% endfor %}
+    {% else %}
+      <p style="font-size:14px; color:#666;">Aucun enregistrement trouvé.</p>
+    {% endif %}
 
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-
-<h2>Table: nwsl_appended</h2>
-
-{% if rows %}
-  {% for row in rows %}
-    <div class="card">
-      {% if row['rubriques'] %}
-      <div class="field">
-        <strong>Rubrique</strong>
-        {{ row['rubriques'] }}
-      </div>
-      {% endif %}
-
-      {% if row['title'] %}
-      <div class="field">
-        <strong>Title</strong>
-        {{ row['title'] }}
-      </div>
-      {% endif %}
-
-      {% if row['text'] %}
-      <div class="field">
-        <strong>Text</strong>
-        <div>{{ row['text'] | safe }}</div>
-      </div>
-      {% endif %}
-
-      {% if row['link'] %}
-      <div class="field">
-        <strong>Link</strong>
-        <a href="{{ row['link'] }}" target="_blank">{{ row['link'] }}</a>
-      </div>
-      {% endif %}
-    </div>
-  {% endfor %}
-{% else %}
-  <p>Aucun enregistrement trouvé.</p>
-{% endif %}
-
-</body>
+  </body>
 </html>
