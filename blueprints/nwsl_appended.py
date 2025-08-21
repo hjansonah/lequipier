@@ -21,7 +21,7 @@ def nwsl_appended():
         conn = psycopg2.connect(**conn_params)
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        query = 'SELECT * FROM "nwsl_appended";'
+        query = 'SELECT * FROM "nwsl_appended" ORDER BY "blocs" ASC;'
         cur.execute(query)
         rows = cur.fetchall()
         columns = list(rows[0].keys()) if rows else []
