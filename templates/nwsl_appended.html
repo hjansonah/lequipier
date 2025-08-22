@@ -49,11 +49,12 @@
     {% else %}
       <p style="font-size:14px; color:#666;">Aucun enregistrement trouvé.</p>
     {% endif %}
-<div style="margin-bottom:20px; text-align:center;">
-  <a href="{{ url_for('nwsl_appended.reglementanciens') }}" style="margin-right:20px; color:#d60000; text-decoration:none;">Règlement anciens</a>
-  <a href="{{ url_for('nwsl_appended.historiqueceag') }}" style="margin-right:20px; color:#d60000; text-decoration:none;">Historique des CE et des AG</a>
-  <a href="{{ url_for('nwsl_appended.statutsanciens') }}" style="color:#d60000; text-decoration:none;">Statuts anciens</a>
-</div>
+    
+    <div style="margin-bottom:20px; text-align:center;">
+      <a href="{{ url_for('nwsl_appended.reglementanciens') }}" style="margin-right:20px; color:#d60000; text-decoration:none;">Règlement anciens</a>
+      <a href="{{ url_for('nwsl_appended.historiqueceag') }}" style="margin-right:20px; color:#d60000; text-decoration:none;">Historique des CE et des AG</a>
+      <a href="{{ url_for('nwsl_appended.statutsanciens') }}" style="color:#d60000; text-decoration:none;">Statuts anciens</a>
+    </div>
 
   </body>
 </html>
