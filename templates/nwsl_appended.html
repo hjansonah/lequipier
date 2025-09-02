@@ -2,8 +2,6 @@
 <html>
   <body style="font-family: Arial, Helvetica, sans-serif; margin:0; padding:16px; background-color:#f9f9f9; color:#222;">
 
-    
-
     <!-- Top photo (shown only once) -->
     <div style="text-align:center; margin-bottom:20px;">
       <img
@@ -23,53 +21,47 @@
       >
     </div>
 
- {% if rows %}
-  {% for row in rows %}
-    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:20px; border:1px solid #ddd; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+    {% if rows %}
+      {% for row in rows %}
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:20px; border:1px solid #ddd; background-color:#ffffff; border-radius:8px; overflow:hidden;">
 
-      <!-- Rubrique -->
-      {% if row['rubriques'] %}
-      <tr>
-        <td style="background-color:#d60000; color:#ffffff; font-weight:bold; font-size:14px; padding:10px 16px; text-transform:uppercase;">
-          {{ row['rubriques'] }}
-        </td>
-      </tr>
-      {% endif %}
+          <!-- Rubrique -->
+          {% if row['rubriques'] %}
+          <tr>
+            <td style="background-color:#d60000; color:#ffffff; font-weight:bold; font-size:14px; padding:10px 16px; text-transform:uppercase;">
+              {{ row['rubriques'] }}
+            </td>
+          </tr>
+          {% endif %}
 
-      <!-- Title -->
-      {% if row['title'] %}
-      <tr>
-        <td style="padding:12px 16px; font-size:20px; font-weight:bold; color:#d60000; line-height:1.4;">
-          {{ row['title'] }}
-        </td>
-      </tr>
-      {% endif %}
+          <!-- Title -->
+          {% if row['title'] %}
+          <tr>
+            <td style="padding:12px 16px; font-size:20px; font-weight:bold; color:#d60000; line-height:1.4;">
+              {{ row['title'] }}
+            </td>
+          </tr>
+          {% endif %}
 
-      <!-- Text -->
-      {% if row['text'] %}
-      <tr>
-        <td style="padding:12px 16px; font-size:14px; line-height:1.6; color:#333; word-break:break-word;">
-          {{ row['text'] | safe }}
-        </td>
-      </tr>
-      {% endif %}
+          <!-- Text -->
+          {% if row['text'] %}
+          <tr>
+            <td style="padding:12px 16px; font-size:14px; line-height:1.6; color:#333; word-break:break-word;">
+              {{ row['text'] | safe }}
+            </td>
+          </tr>
+          {% endif %}
 
-      <!-- Link -->
-      {% if row['link'] %}
-      <tr>
-        <td style="padding:12px 16px; font-size:14px;">
-          <a href="{{ row['link'] }}" target="_blank" style="color:#d60000; text-decoration:none; word-break:break-word;">
-            {{ row['link'] }}
-          </a>
-        </td>
-      </tr>
-      {% endif %}
-
-    </table>
-  {% endfor %}
-{% else %}
-  <p style="font-size:14px; color:#666;">Aucun enregistrement trouvé.</p>
-{% endif %}
+          <!-- Link -->
+          {% if row['link'] %}
+          <tr>
+            <td style="padding:12px 16px; font-size:14px;">
+              <a href="{{ row['link'] }}" target="_blank" style="color:#d60000; text-decoration:none; word-break:break-word;">
+                {{ row['link'] }}
+              </a>
+            </td>
+          </tr>
+          {% endif %}
 
         </table>
       {% endfor %}
@@ -77,6 +69,7 @@
       <p style="font-size:14px; color:#666;">Aucun enregistrement trouvé.</p>
     {% endif %}
 
+    <!-- Bottom links -->
     <div style="margin-bottom:20px; text-align:center;">
       <a href="{{ url_for('nwsl_appended.reglementanciens') }}" style="margin-right:20px; color:#d60000; text-decoration:none;">Règlement interne</a>
       <a href="https://drive.google.com/drive/folders/1VOYzWbKh7PU2o13ppD7xXTxxi_aCWT9G?usp=sharing" target="_blank" style="margin-right:20px; color:#d60000; text-decoration:none;">Historique des CE et des AG</a>
