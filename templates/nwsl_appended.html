@@ -23,47 +23,53 @@
       >
     </div>
 
-    {% if rows %}
-      {% for row in rows %}
-        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:20px; border:1px solid #ddd; background-color:#ffffff;">
+ {% if rows %}
+  {% for row in rows %}
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:20px; border:1px solid #ddd; background-color:#ffffff; border-radius:8px; overflow:hidden;">
 
-          <!-- Rubrique -->
-          {% if row['rubriques'] %}
-          <tr>
-            <td style="background-color:#d60000; color:#ffffff; font-weight:bold; font-size:14px; padding:10px 16px; text-transform:uppercase;">
-              {{ row['rubriques'] }}
-            </td>
-          </tr>
-          {% endif %}
+      <!-- Rubrique -->
+      {% if row['rubriques'] %}
+      <tr>
+        <td style="background-color:#d60000; color:#ffffff; font-weight:bold; font-size:14px; padding:10px 16px; text-transform:uppercase;">
+          {{ row['rubriques'] }}
+        </td>
+      </tr>
+      {% endif %}
 
-          <!-- Title -->
-          {% if row['title'] %}
-          <tr>
-            <td style="padding:12px 16px; font-size:18px; font-weight:bold; color:#222;">
-              {{ row['title'] }}
-            </td>
-          </tr>
-          {% endif %}
+      <!-- Title -->
+      {% if row['title'] %}
+      <tr>
+        <td style="padding:12px 16px; font-size:20px; font-weight:bold; color:#d60000; line-height:1.4;">
+          {{ row['title'] }}
+        </td>
+      </tr>
+      {% endif %}
 
-          <!-- Text -->
-          {% if row['text'] %}
-          <tr>
-            <td style="padding:12px 16px; font-size:14px; line-height:1.5; color:#333;">
-              {{ row['text'] | safe }}
-            </td>
-          </tr>
-          {% endif %}
+      <!-- Text -->
+      {% if row['text'] %}
+      <tr>
+        <td style="padding:12px 16px; font-size:14px; line-height:1.6; color:#333; word-break:break-word;">
+          {{ row['text'] | safe }}
+        </td>
+      </tr>
+      {% endif %}
 
-          <!-- Link -->
-          {% if row['link'] %}
-          <tr>
-            <td style="padding:12px 16px; font-size:14px;">
-              <a href="{{ row['link'] }}" target="_blank" style="color:#d60000; text-decoration:none; word-break:break-word;">
-                {{ row['link'] }}
-              </a>
-            </td>
-          </tr>
-          {% endif %}
+      <!-- Link -->
+      {% if row['link'] %}
+      <tr>
+        <td style="padding:12px 16px; font-size:14px;">
+          <a href="{{ row['link'] }}" target="_blank" style="color:#d60000; text-decoration:none; word-break:break-word;">
+            {{ row['link'] }}
+          </a>
+        </td>
+      </tr>
+      {% endif %}
+
+    </table>
+  {% endfor %}
+{% else %}
+  <p style="font-size:14px; color:#666;">Aucun enregistrement trouvé.</p>
+{% endif %}
 
         </table>
       {% endfor %}
