@@ -34,14 +34,14 @@
           </tr>
           {% endif %}
 
-          <!-- Title -->
-          {% if row['title'] %}
-          <tr>
-            <td style="padding:12px 16px; font-size:20px; font-weight:bold; color:#d60000; line-height:1.4;">
-              {{ row['title'] }}
-            </td>
-          </tr>
-          {% endif %}
+    <!-- Title -->
+{% if row['title'] %}
+<tr>
+  <td style="padding:12px 16px; font-size:20px; font-weight:bold; color:#d60000; line-height:1.4; background-color:yellow;">
+      {{ row['title'] }}
+  </td>
+</tr>
+{% endif %}
 
           <!-- Text -->
           {% if row['text'] %}
@@ -80,7 +80,7 @@
 <!-- Bottom logo -->
 <div style="text-align:center; margin-top:30px; margin-bottom:20px;">
   <img
-    src="{{ url_for('static', filename='images/logo_anciens.png') }}"
+    src="{{ url_for('static', filename='images/logo_anciens.jpg') }}"
     alt="Logo Anciens"
     loading="lazy"
     style="max-width:200px; height:auto; border-radius:8px; border:1px solid #ddd;"
@@ -90,7 +90,7 @@
       this.insertAdjacentHTML(
         'afterend',
         '<div style=&quot;font-size:12px;color:#a00;margin-top:8px;&quot;>' +
-        'Image failed to load: images/logo_anciens.png' +
+        'Image failed to load: images/logo_anciens.jpg' +
         '</div>'
       );"
   >
