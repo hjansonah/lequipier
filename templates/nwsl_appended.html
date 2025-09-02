@@ -4,12 +4,25 @@
   <!-- Container for desktop width -->
   <div style="max-width:760px; margin:0 auto; padding:0 16px; box-sizing:border-box;">
     
-    <!-- Top image -->
-    <div style="text-align:center; margin-bottom:20px;">
-      <img src="{{ url_for('static', filename='images/noah_marches.png') }}"
-           alt="Noah Marches"
-           style="max-width:100%; height:auto; border-radius:8px; border:1px solid #ddd;">
-    </div>
+<!-- Top photo (shown only once) -->
+<div style="text-align:center; margin-bottom:20px;">
+  <img
+    src="{{ url_for('static', filename='images/noah_marches.png') }}"
+    alt="Noah Marches"
+    loading="lazy"
+    style="max-width:50%; height:auto; border-radius:8px; border:1px solid #ddd;"
+    onerror="
+      this.onerror=null;
+      this.src='{{ url_for('static', filename='images/placeholder.jpg') }}';
+      this.insertAdjacentHTML(
+        'afterend',
+        '<div style=&quot;font-size:12px;color:#a00;margin-top:8px;&quot;>' +
+        'Image failed to load: images/noah_marches.png' +
+        '</div>'
+      );"
+  >
+</div>
+
 
     <!-- Loop through rows -->
     {% if rows %}
