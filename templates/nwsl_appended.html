@@ -4,6 +4,25 @@
 
     <h2 style="text-align:center; color:#444; margin-bottom:24px;">Table: nwsl_appended</h2>
 
+    <!-- Top photo (shown only once) -->
+    <div style="text-align:center; margin-bottom:20px;">
+      <img
+        src="{{ url_for('static', filename='images/noah_marches.png') }}"
+        alt="Noah Marches"
+        loading="lazy"
+        style="max-width:100%; height:auto; border-radius:8px; border:1px solid #ddd;"
+        onerror="
+          this.onerror=null;
+          this.src='{{ url_for('static', filename='images/placeholder.jpg') }}';
+          this.insertAdjacentHTML(
+            'afterend',
+            '<div style=&quot;font-size:12px;color:#a00;margin-top:8px;&quot;>' +
+            'Image failed to load: images/noah_marches.png' +
+            '</div>'
+          );"
+      >
+    </div>
+
     {% if rows %}
       {% for row in rows %}
         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:20px; border:1px solid #ddd; background-color:#ffffff;">
@@ -45,27 +64,6 @@
             </td>
           </tr>
           {% endif %}
-
-          <!-- Photo (embedded, static file) -->
-          <tr>
-            <td style="padding:12px 16px; text-align:center;">
-              <img
-                src="{{ url_for('static', filename='images/noah_marches.png') }}"
-                alt="Noah Marches"
-                loading="lazy"
-                style="max-width:100%; height:auto; border-radius:8px; border:1px solid #ddd;"
-                onerror="
-                  this.onerror=null;
-                  this.src='{{ url_for('static', filename='images/placeholder.jpg') }}';
-                  this.closest('td').insertAdjacentHTML(
-                    'beforeend',
-                    '<div style=&quot;font-size:12px;color:#a00;margin-top:8px;&quot;>' +
-                    'Image failed to load: images/noah_marches.png' +
-                    '</div>'
-                  );"
-              >
-            </td>
-          </tr>
 
         </table>
       {% endfor %}
